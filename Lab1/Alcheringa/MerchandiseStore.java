@@ -6,24 +6,20 @@ class OrderProcessor implements Runnable {
     private Order order; 
     private Inventory inventory;
 
-    public OrderProcessor(Order currentOrder, Inventory currentInventory) 
-    { 
+    public OrderProcessor(Order currentOrder, Inventory currentInventory) { 
         order = currentOrder;
         inventory = currentInventory;
     } 
 
-    public void run() 
-    { 
-        inventory.updateItemCount(order); 
+    public void run() { 
+        inventory.processOrder(order);
     } 
 }
 
 public class MerchandiseStore {
-    private static Scanner inputScanner;
-    private static Inventory inventory;
     private static Order[] orderList;
     private static Set<Integer> orderNumberSet;
-    
+
     private static boolean validate (Order order){
         if(orderNumberSet.contains(order.orderNumber)){
             System.out.println("This order number has already been given");
@@ -36,29 +32,24 @@ public class MerchandiseStore {
         }
         return true;
     }
-    public static void main(String[] args) {
-        orderNumberSet = new HashSet<Integer>();
-        inputScanner = new Scanner(System.in); 
 
-        // Load Inventory
-        System.out.println("Enter initial inventory in order S M L C:");
-        int inventoryItemCountArray[] = new int[4];        
-        for(int i = 0; i < 4; i++){
-            inventoryItemCountArray[i] = inputScanner.nextInt();
-        }
-        inventory = new Inventory(inventoryItemCountArray);
-        
-        // Make order array
-        System.out.println("Enter number of Orders:");
-        int numberOfOrders = inputScanner.nextInt();
-        orderList = new Order[numberOfOrders];
-        
+    public static void main(String[] args) {
+        Scanner inputScanner = new Scanner(System.in);
+        Inventory inventory = new Inventory(inputScanner);
+        System.out.println(inventory.getOverallStock());
+
+        int totalOrders;
+        System.out.println("Enter total orders:");
+        totalOrders = inputScanner.nextInt();
+        orderList = new Order[totalOrders];
+        orderNumberSet = new HashSet<Integer>();
+
         System.out.println("Enter orders in format \"orderNumber itemType requiredUnits\"");
         int orderNumber, requiredUnits;
         char itemType;
 
         int currentOrder = 0;
-        while (currentOrder < numberOfOrders) {
+        while (currentOrder < totalOrders) {
             orderNumber = inputScanner.nextInt(); 
             itemType = inputScanner.next().charAt(0);
             requiredUnits = inputScanner.nextInt();    
@@ -70,7 +61,7 @@ public class MerchandiseStore {
         }
 
         ExecutorService threadPool = Executors.newFixedThreadPool(4);
-        for(int i = 0; i < numberOfOrders; i++){
+        for(int i = 0; i < totalOrders; i++){
             Runnable orderProcessor = new OrderProcessor(orderList[i], inventory);
             threadPool.execute(orderProcessor);
         }        
