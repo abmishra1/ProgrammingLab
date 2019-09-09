@@ -1,4 +1,4 @@
-import java.util.concurrent.BrokenBarrierException; 
+// import java.util.concurrent.BrokenBarrierException; 
 
 public class SealingUnit implements Runnable {
     public SealerTray tray;
@@ -34,64 +34,60 @@ public class SealingUnit implements Runnable {
     }
 
     public void run() {
-        while (coldDrinkManufacturing.currentTime <= coldDrinkManufacturing.stopTime) {
-            // System.out.println("Sealer's time is " + coldDrinkManufacturing.currentTime);
-            
-            if (processingBottle != null && processingBottle.deliveryTime <= coldDrinkManufacturing.currentTime) {
-                bottleReady = true;
-                if (processingBottle.deliveryTime == coldDrinkManufacturing.currentTime) {
-                    incrementSealedBottleCount(processingBottle.type);
-                }
+        // System.out.println("Sealer's time is " + coldDrinkManufacturing.runTime2);
+        
+        if (processingBottle != null && processingBottle.deliveryTime <= coldDrinkManufacturing.currentTime) {
+            bottleReady = true;
+            if (processingBottle.deliveryTime == coldDrinkManufacturing.currentTime) {
+                incrementSealedBottleCount(processingBottle.type);
             }
+        }
 
-            if (bottleReady) {
-                boolean bottleDelivered;
-                if (processingBottle.state == 1) {
-                    // put in Packager's tray
-                    packagingUnit.tray.acquireLock();
-                    bottleDelivered = packagingUnit.tray.storeBottle(processingBottle.type);
-                    packagingUnit.tray.releaseLock();
+        if (bottleReady) {
+            boolean bottleDelivered;
+            if (processingBottle.state == 1) {
+                // put in Packager's tray
+                packagingUnit.tray.acquireLock();
+                bottleDelivered = packagingUnit.tray.storeBottle(processingBottle.type);
+                packagingUnit.tray.releaseLock();
+            }
+            else {
+                // add in sealing unit checking needs to be done
+                bottleDelivered = coldDrinkManufacturing.godown.storeBottle(processingBottle.type);
+            }
+            bottleReady = false;
+            processingBottle = null;
+            assert(bottleDelivered == true);
+        }
+        
+        if (processingBottle == null) {
+            // attempt to take from sealer tray, if false then go to unfinished
+            tray.acquireLock();
+            int newBottleType = tray.takeBottle(bottleTypeTray);
+            tray.releaseLock();
+
+            
+            if (newBottleType == -1) {
+                if (coldDrinkManufacturing.runTime1 == coldDrinkManufacturing.runTime2) {
+                    return;
+                }
+                newBottleType = coldDrinkManufacturing.unfinishedTray.takeBottle(bottleTypeUnfinished);
+                if (newBottleType != -1) {
+                    processingBottle = new Bottle(newBottleType, 1, coldDrinkManufacturing.currentTime + 3); // first argument represnt type change accordingly
+                    coldDrinkManufacturing.runTime2 += 3;
+                    bottleTypeUnfinished = (newBottleType + 1) % 2;
+                    // System.out.println("Global se sealer ne liya");
                 }
                 else {
-                    // add in sealing unit checking needs to be done
-                    bottleDelivered = coldDrinkManufacturing.godown.storeBottle(processingBottle.type);
-                }
-                bottleReady = false;
-                processingBottle = null;
-                assert(bottleDelivered == true);
-            }
-            
-            if (processingBottle == null) {
-                // attempt to take from sealer tray, if false then go to unfinished
-                tray.acquireLock();
-                int newBottleType = tray.takeBottle(bottleTypeTray, coldDrinkManufacturing.currentTime);
-                tray.releaseLock();
-                
-                if (newBottleType == -1) {
-                    newBottleType = coldDrinkManufacturing.unfinishedTray.takeBottle(bottleTypeUnfinished);
-                    if (newBottleType != -1) {
-                        processingBottle = new Bottle(newBottleType, 1, coldDrinkManufacturing.currentTime + 3); // first argument represnt type change accordingly
-                        bottleTypeUnfinished = (newBottleType + 1) % 2;
-                        // System.out.println("Global se sealer ne liya");
-                    }
-                    // else {
-                    //     processingBottle = null;
-                    // }
-                }
-                else {
-                    processingBottle = new Bottle(newBottleType, 0, coldDrinkManufacturing.currentTime + 3); // first argument represnt type change accordingly
-                    // bottleTypeTray = (newBottleType + 1) % 2;
-                    // System.out.println("Tray se sealer ne liya");
+                    coldDrinkManufacturing.runTime2++;
                 }
             }
-
-            try { 
-                // System.out.println("Sealing awaiting time");
-                coldDrinkManufacturing.timeBarrier.await();
-            }  
-            catch (InterruptedException | BrokenBarrierException e) { 
-                // e.printStackTrace(); 
-            } 
+            else {
+                processingBottle = new Bottle(newBottleType, 0, coldDrinkManufacturing.currentTime + 3); // first argument represnt type change accordingly
+                coldDrinkManufacturing.runTime2 += 3;
+                // bottleTypeTray = (newBottleType + 1) % 2;
+                // System.out.println("Tray se sealer ne liya");
+            }
         }
     }
 }

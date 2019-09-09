@@ -4,13 +4,11 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SealerTray {
     private int bottle1Count;
     private int bottle2Count;
-    private int nextDelivery;
     private Lock lock; 
 
     public SealerTray(int newBottle1Count, int newBottle2Count) {
         bottle1Count = newBottle1Count;
         bottle2Count = newBottle2Count;
-        nextDelivery = 0;
         lock = new ReentrantLock();
     }
 
@@ -43,17 +41,15 @@ public class SealerTray {
         return;
     } 
 
-    public int takeBottle(int bottleType, int currentTime) {
+    public int takeBottle(int bottleType) {
         if (!isBottleAvailable(bottleType)) {
             int otherBottleType = (bottleType + 1) % 2;
             if (!isBottleAvailable(otherBottleType)) {
                 return -1;
             }
-            nextDelivery = currentTime + 3;
             decrementBottleCount(otherBottleType);
             return otherBottleType;
         }
-        nextDelivery = currentTime + 3;
         decrementBottleCount(bottleType);
         return bottleType;
     }
@@ -71,10 +67,6 @@ public class SealerTray {
             bottle2Count++;
         }
         return true;
-    }
-
-    public int getNextDelivery() {
-        return nextDelivery;
     }
 
     public void printTray() {

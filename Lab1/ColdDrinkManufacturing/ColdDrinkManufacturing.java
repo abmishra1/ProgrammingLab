@@ -1,12 +1,10 @@
 import java.util.*;
-import java.util.concurrent.CyclicBarrier; 
-import java.util.concurrent.BrokenBarrierException; 
 
 public class ColdDrinkManufacturing implements Runnable {
     public int currentTime;
+    public int runTime1;
+    public int runTime2;
     public int stopTime;
-    public CyclicBarrier sealingBarrier; 
-    public CyclicBarrier timeBarrier; 
     
     PackagingUnit packagingUnit;
     SealingUnit sealingUnit;
@@ -20,32 +18,11 @@ public class ColdDrinkManufacturing implements Runnable {
         godown = new Godown();
         packagingUnit = new PackagingUnit(this);
         sealingUnit = new SealingUnit(this);
+        runTime1 = 0;
+        runTime2 = 0;
 
         packagingUnit.sealingUnit = sealingUnit;
         sealingUnit.packagingUnit = packagingUnit;
-
-        sealingBarrier = new CyclicBarrier(2); 
-        timeBarrier = new CyclicBarrier(3, new Runnable() {
-            public void run() {
-                currentTime++;
-                // System.out.println("Time is " + currentTime);
-                // packagingUnit.tray.printTray();
-                // sealingUnit.tray.printTray();
-                // System.out.println("***************************");                
-                if (currentTime <= stopTime) {
-                    timeBarrier.reset();
-                }
-                // else { // Do not go gentle into that cold dark night
-                    System.out.println("B1 packaged: " + packagingUnit.packagedBottle1Count);
-                    System.out.println("B1 sealed: " + sealingUnit.sealedBottle1Count);
-                    System.out.println("B1 in godown: " + godown.getBottleCount(1));
-                    System.out.println("B2 packaged: " + packagingUnit.packagedBottle2Count);
-                    System.out.println("B2 sealed: " + sealingUnit.sealedBottle2Count);
-                    System.out.println("B2 in godown: " + godown.getBottleCount(0));
-                    System.out.println("");
-                // }
-            }
-        }); 
     }
 
     public static void main(String[] args) 
@@ -67,17 +44,42 @@ public class ColdDrinkManufacturing implements Runnable {
     public void run() {
         Thread t1 = new Thread(this.packagingUnit);
         Thread t2 = new Thread(this.sealingUnit);
-        t1.start();
-        t2.start();
         
-        while (this.currentTime <= this.stopTime) {
-            try { 
-                // System.out.println("Manufacturing Unit awaiting time");
-                timeBarrier.await();
-            }  
-            catch (InterruptedException | BrokenBarrierException e) { 
-                // e.printStackTrace(); 
-            } 
+        // t1 and t2 post their next run time
+        try {
+            currentTime = Math.min(runTime1, runTime2);
+            while (currentTime <= stopTime) {
+                // System.out.println("Current time is: " + currentTime);
+                if (runTime1 == currentTime && runTime2 == currentTime) {
+                    t1 = new Thread(this.packagingUnit);
+                    t2 = new Thread(this.sealingUnit);
+                    t1.start();
+                    t2.start();
+                    t1.join();
+                    t2.join();
+                }
+                else if (runTime1 == currentTime) {
+                    t1 = new Thread(this.packagingUnit);
+                    t1.start();
+                    t1.join();
+                }
+                else if (runTime2 == currentTime) {
+                    t2 = new Thread(this.sealingUnit);
+                    t2.start();
+                    t2.join();
+                }
+                currentTime = Math.min(runTime1, runTime2);
+            }
         }
+        catch (InterruptedException e){
+            e.printStackTrace();
+        }
+        System.out.println("B1 packaged: " + packagingUnit.packagedBottle1Count);
+        System.out.println("B1 sealed: " + sealingUnit.sealedBottle1Count);
+        System.out.println("B1 in godown: " + godown.getBottleCount(1));
+        System.out.println("B2 packaged: " + packagingUnit.packagedBottle2Count);
+        System.out.println("B2 sealed: " + sealingUnit.sealedBottle2Count);
+        System.out.println("B2 in godown: " + godown.getBottleCount(0));
+        System.out.println("");
     }
 }
