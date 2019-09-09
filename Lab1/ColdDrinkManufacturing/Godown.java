@@ -7,7 +7,7 @@ public class Godown {
         bottle2Count = 0;
     }
 
-    public boolean storeBottle(int bottleType) {
+    public synchronized boolean storeBottle(int bottleType) {
         if (bottleType == 1) {
             bottle1Count++;
             return true;

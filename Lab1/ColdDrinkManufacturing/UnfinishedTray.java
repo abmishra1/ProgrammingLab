@@ -11,7 +11,10 @@ public class UnfinishedTray {
         if (bottleType == 1) {
             bottle1Count -= 1;
         }
-        bottle2Count -= 1;
+        else {
+            bottle2Count -= 1;
+        }
+        return;
     } 
 
     private boolean isBottleAvailable(int bottleType) {
@@ -21,7 +24,7 @@ public class UnfinishedTray {
         return (bottle2Count > 0);
     }
 
-    public int takeBottle(int bottleType) {
+    public synchronized int takeBottle(int bottleType) {
         // System.out.println("taking brand new bottle");
         if (!isBottleAvailable(bottleType)) {
             int otherBottleType = (bottleType + 1) % 2;
