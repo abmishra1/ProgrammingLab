@@ -5,10 +5,10 @@ public class Vehicle {
     String status;
     int passageTime;
 
-    public Vehicle(int newvehicleNumber, char newSource, char newDestination, String newStatus, int newPassageTime) {
+    public Vehicle(int newvehicleNumber, String newSource, String newDestination, String newStatus, int newPassageTime) {
         vehicleNumber = newvehicleNumber;
-        source = newSource;
-        destination = newDestination;
+        source = newSource.charAt(0);
+        destination = newDestination.charAt(0);
         status = newStatus;
         passageTime = newPassageTime;
     }
