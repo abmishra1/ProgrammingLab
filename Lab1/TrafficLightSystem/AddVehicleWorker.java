@@ -12,6 +12,17 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         this.destinationDirection = destinationDirection;
     }
 
+
+    private static boolean isDirectionValid(String direction) {
+        return (direction.equals("South") || direction.equals("East") || direction.equals("West"));
+    }
+
+    private static boolean isFlowValid(String sourceDirection, String destinationDirection) {
+        if (!isDirectionValid(sourceDirection) || !isDirectionValid(destinationDirection)) return false;
+        if (sourceDirection == destinationDirection) return false;
+        return true;
+    }
+
     private static int getTrafficSignalNumber(String sourceDirection, String destinationDirection) {
         if (sourceDirection.equals("South") && destinationDirection.equals("East")) {
             return 1;
@@ -33,12 +44,16 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
 
     @Override
     protected Vehicle doInBackground() throws Exception {
+        if (!isFlowValid(sourceDirection, destinationDirection)) {
+            return null;
+        }
+        int newVehicleId = trafficSystemGUIReference.getNewVehicleId();
         int trafficLightNumber = getTrafficSignalNumber(sourceDirection, destinationDirection);
         int passageTime = trafficSystemGUIReference.getNextPassageTime(trafficLightNumber);
         String vehicleStatus = getVehicleStatus(passageTime);
-        
-        Vehicle newVehicle = new Vehicle(100, sourceDirection, destinationDirection, vehicleStatus, passageTime);
-        System.out.println("Hi");
+        System.out.println("Vehicle " + newVehicleId + " " + trafficSystemGUIReference.currentTime + " " + passageTime);
+        passageTime -= trafficSystemGUIReference.currentTime;
+        Vehicle newVehicle = new Vehicle(newVehicleId, sourceDirection, destinationDirection, vehicleStatus, passageTime);
         return newVehicle;
     }
 
@@ -46,6 +61,7 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
     protected void done() {
         try {
             Vehicle newVehicle = get();
+            if (newVehicle == null) return;
             trafficSystemGUIReference.acquireLock();
             trafficSystemGUIReference.vehicleModel.addRow(newVehicle.getVehicleStatus());
             trafficSystemGUIReference.releaseLock();
@@ -54,8 +70,7 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
             e.printStackTrace();
         }
         catch (ExecutionException e) {
-        // This is thrown if we throw an exception
-        // from doInBackground.
+            e.printStackTrace();
         }
     }
 }
