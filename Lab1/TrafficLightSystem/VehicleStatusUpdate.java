@@ -8,53 +8,48 @@ public class VehicleStatusUpdate extends SwingWorker {
         trafficSystemGUIReference = trafficSystemGUI;
     }
     
+    public void updateVehicleTable() {
+        trafficSystemGUIReference.acquireLock();
+        int numberOfVehicles = trafficSystemGUIReference.vehicleStatusTable.getRowCount();
+        for (int i = 0; i < numberOfVehicles; i++) {
+            int previousRemainingTime = (int) trafficSystemGUIReference.vehicleStatusTable.getValueAt(i,4);
+            int newRemainingTime = Math.max(previousRemainingTime-1,0);
+            trafficSystemGUIReference.vehicleStatusTable.setValueAt(newRemainingTime,i,4);
+            if (newRemainingTime <= 0) {
+                trafficSystemGUIReference.vehicleStatusTable.setValueAt("Pass",i,3);
+            }
+        }
+        trafficSystemGUIReference.releaseLock();
+    }
+
+    public void updateTrafficSignalTable(){
+        int currentCountDown = trafficSystemGUIReference.currentTime % 180;
+        int activeTrafficLightNumber = (currentCountDown/60);
+        for(int trafficLightNumberIndex=0; trafficLightNumberIndex<3 ; trafficLightNumberIndex++){
+            if(activeTrafficLightNumber == trafficLightNumberIndex){
+                int remainingCountDownTime = (60*(activeTrafficLightNumber+1)) - currentCountDown;
+                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Green",trafficLightNumberIndex,1);
+                trafficSystemGUIReference.trafficLightStatusTable.setValueAt(remainingCountDownTime,trafficLightNumberIndex,2);  
+            }
+            else{
+                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Red",trafficLightNumberIndex,1);
+                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("-",trafficLightNumberIndex,2);  
+            }
+        }
+    }
+    
     @Override
     protected Integer doInBackground() throws Exception {
-        return 1;
+        return 0;
     }
     
     @Override
     protected void done() {
         try {
             int x = (int) get();
-            trafficSystemGUIReference.acquireLock();
-            int numberOfVehicles = trafficSystemGUIReference.vehicleStatusTable.getRowCount();
-            for (int i = 0; i < numberOfVehicles; i++) {
-                int previousRemainingTime = (int) trafficSystemGUIReference.vehicleStatusTable.getValueAt(i,4);
-                int newRemainingTime = Math.max(previousRemainingTime-1,0);
-                trafficSystemGUIReference.vehicleStatusTable.setValueAt(newRemainingTime,i,4);
-                // trafficSystemGUIReference.vehicleStatusList[i][4]--;
-                if (newRemainingTime <= 0) {
-                    trafficSystemGUIReference.vehicleStatusTable.setValueAt("Pass",i,3);
-                }
-            }
-            trafficSystemGUIReference.releaseLock();
-
-            int currentCountDown = trafficSystemGUIReference.currentTime % 180;
-            if(currentCountDown < 60){
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt(60-currentCountDown,0,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Green",0,1);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("-",1,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Red",1,1);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("-",2,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Red",2,1);
-            }
-            else if(currentCountDown < 120){
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("-",0,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Red",0,1);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt(120-currentCountDown,1,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Green",1,1);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("-",2,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Red",2,1);
-            }
-            else{
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("-",0,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Red",0,1);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt(120-currentCountDown,1,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Red",1,1);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt(180-currentCountDown,2,2);
-                trafficSystemGUIReference.trafficLightStatusTable.setValueAt("Green",2,1);
-            }
+            updateVehicleTable();
+            updateTrafficSignalTable();
+            trafficSystemGUIReference.setInvalidDirectionLabel(true);
 
         } catch (InterruptedException e) {
             e.printStackTrace();

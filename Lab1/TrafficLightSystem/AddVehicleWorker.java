@@ -13,24 +13,41 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
     }
 
 
+    // private static boolean isDirectionValid(String direction) {
+    //     return (direction.equals("South") || direction.equals("East") || direction.equals("West"));
+    // }
+
     private static boolean isDirectionValid(String direction) {
-        return (direction.equals("South") || direction.equals("East") || direction.equals("West"));
+        return (direction.equals("S") || direction.equals("E") || direction.equals("W"));
     }
 
     private static boolean isFlowValid(String sourceDirection, String destinationDirection) {
         if (!isDirectionValid(sourceDirection) || !isDirectionValid(destinationDirection)) return false;
-        if (sourceDirection == destinationDirection) return false;
+        if (sourceDirection.equals(destinationDirection)) return false;
         return true;
     }
 
+    // private static int getTrafficSignalNumber(String sourceDirection, String destinationDirection) {
+    //     if (sourceDirection.equals("South") && destinationDirection.equals("East")) {
+    //         return 1;
+    //     }
+    //     if (sourceDirection.equals("West") && destinationDirection.equals("South")) {
+    //         return 2;
+    //     }
+    //     if (sourceDirection.equals("East") && destinationDirection.equals("West")) {
+    //         return 3;
+    //     }
+    //     return -1;
+    // }
+
     private static int getTrafficSignalNumber(String sourceDirection, String destinationDirection) {
-        if (sourceDirection.equals("South") && destinationDirection.equals("East")) {
+        if (sourceDirection.equals("S") && destinationDirection.equals("E")) {
             return 1;
         }
-        if (sourceDirection.equals("West") && destinationDirection.equals("South")) {
+        if (sourceDirection.equals("W") && destinationDirection.equals("S")) {
             return 2;
         }
-        if (sourceDirection.equals("East") && destinationDirection.equals("West")) {
+        if (sourceDirection.equals("E") && destinationDirection.equals("W")) {
             return 3;
         }
         return -1;
@@ -61,9 +78,14 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
     protected void done() {
         try {
             Vehicle newVehicle = get();
-            if (newVehicle == null) return;
+            if (newVehicle == null) {
+                System.out.println("Hi");
+                trafficSystemGUIReference.setInvalidDirectionLabel(false);
+                return;
+            }
             trafficSystemGUIReference.acquireLock();
             trafficSystemGUIReference.vehicleModel.addRow(newVehicle.getVehicleStatus());
+            trafficSystemGUIReference.setInvalidDirectionLabel(true);
             trafficSystemGUIReference.releaseLock();
         }
         catch (InterruptedException e) {

@@ -4,12 +4,15 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 import javax.swing.table.DefaultTableModel;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.awt.event.*;
 import java.awt.Component;
+import java.awt.Dimension;
+
 
 public class TrafficSystemGUI {
     int currentTime;
@@ -30,6 +33,7 @@ public class TrafficSystemGUI {
     JTextField source;
     JTextField destination;
     JButton addVehicleButton;
+    JLabel invalidDirectionLabel;
 
     public void acquireLock() {
         lock.lock();
@@ -77,6 +81,7 @@ public class TrafficSystemGUI {
         trafficLightModel.addRow(T3.getTrafficSignalStatus());
         trafficLightStatusTable = new JTable(trafficLightModel);
         JScrollPane scrollPane2 = new JScrollPane(trafficLightStatusTable);
+
         pane.add(scrollPane2); 
 
         vehicleModel = new DefaultTableModel();
@@ -88,14 +93,16 @@ public class TrafficSystemGUI {
         pane.add(scrollPane);
 
 
+        JPanel bottomPanel = new JPanel();
+
         source = new JTextField(16);
         source.setMaximumSize( source.getPreferredSize() );
-        source.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // source.setAlignmentX(Component.CENTER_ALIGNMENT);
         destination = new JTextField(16);
         destination.setMaximumSize( destination.getPreferredSize() );        
-        destination.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // destination.setAlignmentX(Component.CENTER_ALIGNMENT);
         addVehicleButton = new JButton("Add Vehicle");
-        addVehicleButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // addVehicleButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         final TrafficSystemGUI x = this;
 
         addVehicleButton.addActionListener(new ActionListener() {
@@ -107,7 +114,7 @@ public class TrafficSystemGUI {
             }
         });
 
-        javax.swing.Timer timer = new javax.swing.Timer(3000, new ActionListener() {
+        javax.swing.Timer timer = new javax.swing.Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent vehicleStatusUpdateEvent) {
                 currentTime++;
                 VehicleStatusUpdate vehicleStatusUpdtaeInstance = new VehicleStatusUpdate(x);
@@ -116,13 +123,27 @@ public class TrafficSystemGUI {
          });
         timer.start();
 
-        pane.add(source);
-        pane.add(destination);
-        pane.add(addVehicleButton);
+        bottomPanel.add(source);
+        bottomPanel.add(destination);
+        bottomPanel.add(addVehicleButton);
+        pane.add(bottomPanel);
 
+        invalidDirectionLabel = new JLabel("Enter Source and Destination direction");
+        invalidDirectionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        pane.add(invalidDirectionLabel);
+        
         frame.add(pane);
         frame.setSize(720, 720);
         frame.setVisible(false);
+    }
+
+    public void setInvalidDirectionLabel(boolean isValid) {
+        if (!isValid) {
+            invalidDirectionLabel.setText("Invalid directions entered");
+        }
+        else {
+            invalidDirectionLabel.setText(" ");
+        }
     }
 
     public int getNextPassageTime(int trafficLightNumber) {
