@@ -1,31 +1,19 @@
 import java.util.*;
 
 public class Inventory {
-    static InventoryItem smallShirts;
-    static InventoryItem mediumShirts;
-    static InventoryItem largeShirts;
-    static InventoryItem caps;
+    private InventoryItem smallShirts;
+    private InventoryItem mediumShirts;
+    private InventoryItem largeShirts;
+    private InventoryItem caps;
 
-    public Inventory(Scanner inputScanner) {
-        int initialStock;
-        System.out.println("Enter number of S shirts:");
-        initialStock = inputScanner.nextInt();
-        smallShirts = new InventoryItem(initialStock);
-
-        System.out.println("Enter number of M shirts:");
-        initialStock = inputScanner.nextInt();
-        mediumShirts = new InventoryItem(initialStock);
-        
-        System.out.println("Enter number of L shirts:");
-        initialStock = inputScanner.nextInt();
-        largeShirts = new InventoryItem(initialStock);
-        
-        System.out.println("Enter number of Caps:");
-        initialStock = inputScanner.nextInt();
-        caps = new InventoryItem(initialStock);
+    public Inventory(int initialStockS, int initialStockM, int initialStockL, int initialStockC) {
+        smallShirts = new InventoryItem(initialStockS, this);
+        mediumShirts = new InventoryItem(initialStockM, this);
+        largeShirts = new InventoryItem(initialStockL, this);
+        caps = new InventoryItem(initialStockC, this);
     }
 
-    public static String getOverallStock() {
+    public String getOverallStock() {
         String overallStock = "Inventory ";
         overallStock += ("S: " + smallShirts.getCurrentStock()) + " ";
         overallStock += ("M: " + mediumShirts.getCurrentStock()) + " ";
@@ -35,7 +23,7 @@ public class Inventory {
     }
 
     public void processOrder(Order order) {
-        switch (order.itemType) {
+        switch (order.getItemType()) {
             case 'S':
                 smallShirts.processOrder(order);
                 break;

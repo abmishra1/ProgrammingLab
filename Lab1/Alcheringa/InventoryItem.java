@@ -1,8 +1,10 @@
 public class InventoryItem {
     private int currentStock;
+    private Inventory inventory;
 
-    public InventoryItem(int initialStock) {
-        currentStock = initialStock;
+    public InventoryItem(int initialStock, Inventory inventory) {
+        this.currentStock = initialStock;
+        this.inventory = inventory;
     }
 
     public int getCurrentStock() {
@@ -10,14 +12,15 @@ public class InventoryItem {
     }
 
     public synchronized void processOrder(Order order) {
-        int requiredUnits = order.requiredUnits;
-        int orderIndex = order.orderNumber;
+        int requiredUnits = order.getRequiredUnits();
+        int orderIndex = order.getOrderNumber();
         if (requiredUnits > currentStock) {
-            System.out.println("Order " + orderIndex + " failed.");
+            String overallStock = inventory.getOverallStock();        
+            System.out.println("Order " + orderIndex + " failed.    " + overallStock);
             return;
         }
         currentStock = currentStock - requiredUnits;
-        String overallStock = Inventory.getOverallStock();
+        String overallStock = inventory.getOverallStock();
         System.out.println("Order " + orderIndex + " successful. " + overallStock);
     }
 }
