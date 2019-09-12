@@ -2,19 +2,19 @@ import javax.swing.SwingWorker;
 import java.util.concurrent.ExecutionException;
 
 public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
-    private TrafficSystemGUI trafficSystemGUIReference;
+    private TrafficSystemGUI trafficSystemGUI;
     private String sourceDirection;
     private String destinationDirection;
 
     public AddVehicleWorker(TrafficSystemGUI parentReference, String sourceDirection, String destinationDirection) {
-        this.trafficSystemGUIReference = parentReference;
+        this.trafficSystemGUI = parentReference;
         this.sourceDirection = sourceDirection;
         this.destinationDirection = destinationDirection;
     }
 
-
     // private static boolean isDirectionValid(String direction) {
-    //     return (direction.equals("South") || direction.equals("East") || direction.equals("West"));
+    // return (direction.equals("South") || direction.equals("East") ||
+    // direction.equals("West"));
     // }
 
     private static boolean isDirectionValid(String direction) {
@@ -22,22 +22,25 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
     }
 
     private static boolean isFlowValid(String sourceDirection, String destinationDirection) {
-        if (!isDirectionValid(sourceDirection) || !isDirectionValid(destinationDirection)) return false;
-        if (sourceDirection.equals(destinationDirection)) return false;
+        if (!isDirectionValid(sourceDirection) || !isDirectionValid(destinationDirection))
+            return false;
+        if (sourceDirection.equals(destinationDirection))
+            return false;
         return true;
     }
 
-    // private static int getTrafficSignalNumber(String sourceDirection, String destinationDirection) {
-    //     if (sourceDirection.equals("South") && destinationDirection.equals("East")) {
-    //         return 1;
-    //     }
-    //     if (sourceDirection.equals("West") && destinationDirection.equals("South")) {
-    //         return 2;
-    //     }
-    //     if (sourceDirection.equals("East") && destinationDirection.equals("West")) {
-    //         return 3;
-    //     }
-    //     return -1;
+    // private static int getTrafficSignalNumber(String sourceDirection, String
+    // destinationDirection) {
+    // if (sourceDirection.equals("South") && destinationDirection.equals("East")) {
+    // return 1;
+    // }
+    // if (sourceDirection.equals("West") && destinationDirection.equals("South")) {
+    // return 2;
+    // }
+    // if (sourceDirection.equals("East") && destinationDirection.equals("West")) {
+    // return 3;
+    // }
+    // return -1;
     // }
 
     private static int getTrafficSignalNumber(String sourceDirection, String destinationDirection) {
@@ -61,16 +64,20 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
 
     @Override
     protected Vehicle doInBackground() throws Exception {
+        // Generate vehicle object by using validated use input
         if (!isFlowValid(sourceDirection, destinationDirection)) {
             return null;
         }
-        int newVehicleId = trafficSystemGUIReference.getNewVehicleId();
+        
+        int newVehicleId = trafficSystemGUI.getNewVehicleId();
         int trafficLightNumber = getTrafficSignalNumber(sourceDirection, destinationDirection);
-        int passageTime = trafficSystemGUIReference.getNextPassageTime(trafficLightNumber);
+        // Allot next passing time for this vehicle and calc waiting time from that
+        int passageTime = trafficSystemGUI.getNextPassageTime(trafficLightNumber);
+        int waitingTime = passageTime - trafficSystemGUI.currentTime;
         String vehicleStatus = getVehicleStatus(passageTime);
-        System.out.println("Vehicle " + newVehicleId + " " + trafficSystemGUIReference.currentTime + " " + passageTime);
-        passageTime -= trafficSystemGUIReference.currentTime;
-        Vehicle newVehicle = new Vehicle(newVehicleId, sourceDirection, destinationDirection, vehicleStatus, passageTime);
+
+        Vehicle newVehicle = new Vehicle(newVehicleId, sourceDirection, destinationDirection, vehicleStatus,
+                waitingTime);
         return newVehicle;
     }
 
@@ -79,18 +86,19 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         try {
             Vehicle newVehicle = get();
             if (newVehicle == null) {
-                trafficSystemGUIReference.setInvalidDirectionLabel(true);
+                // invalid user input
+                trafficSystemGUI.setInvalidDirectionLabel(true);
                 return;
             }
-            trafficSystemGUIReference.acquireSemaphore();
-            trafficSystemGUIReference.vehicleModel.addRow(newVehicle.getVehicleStatus());
-            trafficSystemGUIReference.setInvalidDirectionLabel(false);
-            trafficSystemGUIReference.releaseSemaphore();
-        }
-        catch (InterruptedException e) {
+            // get synchronized access to the vehicle table data and
+            // append this new vehicle
+            trafficSystemGUI.acquireSemaphore();
+            trafficSystemGUI.vehicleModel.addRow(newVehicle.getVehicleStatus());
+            trafficSystemGUI.setInvalidDirectionLabel(false);
+            trafficSystemGUI.releaseSemaphore();
+        } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-        catch (ExecutionException e) {
+        } catch (ExecutionException e) {
             e.printStackTrace();
         }
     }

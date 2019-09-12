@@ -32,7 +32,7 @@ public class VehicleStatusUpdate extends SwingWorker {
                 trafficSystemGUI.trafficLightStatusTable.setValueAt(remainingCountDownTime, trafficLightNumber, 2);
             } else {
                 trafficSystemGUI.trafficLightStatusTable.setValueAt("Red", trafficLightNumber, 1);
-                trafficSystemGUI.trafficLightStatusTable.setValueAt("-", trafficLightNumber, 2);
+                trafficSystemGUI.trafficLightStatusTable.setValueAt("--", trafficLightNumber, 2);
             }
         }
     }
@@ -44,16 +44,8 @@ public class VehicleStatusUpdate extends SwingWorker {
 
     @Override
     protected void done() {
-        try {
-            int x = (int) get();
-            updateVehicleTable();
-            updateTrafficSignalTable();
-            trafficSystemGUI.setInvalidDirectionLabel(false);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+        updateVehicleTable();
+        updateTrafficSignalTable();
+        trafficSystemGUI.setInvalidDirectionLabel(false);
     }
 }

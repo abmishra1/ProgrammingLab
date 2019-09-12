@@ -110,10 +110,6 @@ public class TrafficSystemGUI {
         frame.setVisible(false);
     }
 
-    public int getCurrentTime() {
-        return currentTime;
-    }
-
     public void acquireSemaphore() {
         try {
             semaphore.acquire();
