@@ -1,5 +1,5 @@
-import javax.swing.JFrame; 
-import javax.swing.JPanel; 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JScrollPane;
@@ -12,28 +12,28 @@ import java.awt.event.*;
 import java.awt.Component;
 import java.awt.Dimension;
 
-
 public class TrafficSystemGUI {
     int currentTime;
-    int lastVehicleId;
-    TrafficSignal T1;
-    TrafficSignal T2;
-    TrafficSignal T3;
+    private int lastVehicleId;
+    private TrafficSignal T1;
+    private TrafficSignal T2;
+    private TrafficSignal T3;
     DefaultTableModel vehicleModel;
     DefaultTableModel trafficLightModel;
-    private Semaphore semaphore; 
-    static String[] vehicleStatusColumnNames = {"Vehicle", "Source", "Destination", "Status", "Remaining Time"};
-    static String[] trafficLightStatusColumnNames = {"Traffic Light", "Status", "Time"};
+    private Semaphore semaphore;
+    private static String[] vehicleStatusColumnNames = { "Vehicle", "Source", "Destination", "Status",
+            "Remaining Time" };
+    private static String[] trafficLightStatusColumnNames = { "Traffic Light", "Status", "Time" };
 
-    JFrame frame;
-    JPanel pane ;
+    private JFrame frame;
+    private JPanel pane;
     JTable vehicleStatusTable;
     JTable trafficLightStatusTable;
-    JTextField source;
-    JTextField destination;
-    JButton addVehicleButton;
-    JLabel invalidDirectionLabel;
-    
+    private JTextField source;
+    private JTextField destination;
+    private JButton addVehicleButton;
+    private JLabel invalidDirectionLabel;
+
     public TrafficSystemGUI() {
         currentTime = 0;
         lastVehicleId = 0;
@@ -41,8 +41,7 @@ public class TrafficSystemGUI {
         T2 = new TrafficSignal(2);
         T3 = new TrafficSignal(3);
         semaphore = new Semaphore(1);
-        lock = new ReentrantLock();
-        
+
         frame = new JFrame("Automatic Traffic System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pane = new JPanel();
@@ -56,35 +55,33 @@ public class TrafficSystemGUI {
         trafficLightModel.addRow(T2.getTrafficSignalStatus());
         trafficLightModel.addRow(T3.getTrafficSignalStatus());
         trafficLightStatusTable = new JTable(trafficLightModel);
-        JScrollPane scrollPane2 = new JScrollPane(trafficLightStatusTable);
+        trafficLightStatusTable.setEnabled(false);
+        JScrollPane scrollPane1 = new JScrollPane(trafficLightStatusTable);
 
-        pane.add(scrollPane2); 
+        pane.add(scrollPane1);
 
         vehicleModel = new DefaultTableModel();
         for (int i = 0; i < vehicleStatusColumnNames.length; i++) {
             vehicleModel.addColumn(vehicleStatusColumnNames[i]);
         }
         vehicleStatusTable = new JTable(vehicleModel);
-        JScrollPane scrollPane = new JScrollPane(vehicleStatusTable);
-        pane.add(scrollPane);
-
+        vehicleStatusTable.setEnabled(false);
+        JScrollPane scrollPane2 = new JScrollPane(vehicleStatusTable);
+        pane.add(scrollPane2);
 
         JPanel bottomPanel = new JPanel();
-
         source = new JTextField(16);
-        source.setMaximumSize( source.getPreferredSize() );
-        // source.setAlignmentX(Component.CENTER_ALIGNMENT);
+        source.setMaximumSize(source.getPreferredSize());
         destination = new JTextField(16);
-        destination.setMaximumSize( destination.getPreferredSize() );        
-        // destination.setAlignmentX(Component.CENTER_ALIGNMENT);
+        destination.setMaximumSize(destination.getPreferredSize());
         addVehicleButton = new JButton("Add Vehicle");
-        // addVehicleButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        final TrafficSystemGUI x = this;
+
+        final TrafficSystemGUI selfRef = this;
 
         addVehicleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent vehicleAddedEvent) {
-                new AddVehicleWorker(x,source.getText(), destination.getText()).execute();
+                new AddVehicleWorker(selfRef, source.getText(), destination.getText()).execute();
                 source.setText("");
                 destination.setText("");
             }
@@ -93,10 +90,10 @@ public class TrafficSystemGUI {
         javax.swing.Timer timer = new javax.swing.Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent vehicleStatusUpdateEvent) {
                 currentTime++;
-                VehicleStatusUpdate vehicleStatusUpdtaeInstance = new VehicleStatusUpdate(x);
+                VehicleStatusUpdate vehicleStatusUpdtaeInstance = new VehicleStatusUpdate(selfRef);
                 vehicleStatusUpdtaeInstance.execute();
             }
-         });
+        });
         timer.start();
 
         bottomPanel.add(source);
@@ -104,17 +101,25 @@ public class TrafficSystemGUI {
         bottomPanel.add(addVehicleButton);
         pane.add(bottomPanel);
 
-        invalidDirectionLabel = new JLabel("Enter Source and Destination direction");
+        invalidDirectionLabel = new JLabel(" ");
         invalidDirectionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         pane.add(invalidDirectionLabel);
-        
+
         frame.add(pane);
         frame.setSize(720, 720);
         frame.setVisible(false);
     }
 
+    public int getCurrentTime() {
+        return currentTime;
+    }
+
     public void acquireSemaphore() {
-        semaphore.acquire();
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void releaseSemaphore() {
@@ -126,21 +131,10 @@ public class TrafficSystemGUI {
         return lastVehicleId;
     }
 
-    public void vehicleAdded(ActionEvent vehicleAddedEvent) {
-        String command = vehicleAddedEvent.getActionCommand();
-        if (command.equals("submit")) {
-            new AddVehicleWorker(this, source.getText(), destination.getText()).execute();
-            source.setText("");
-            destination.setText("");
-        }
-        return;
-    }
-
     public void setInvalidDirectionLabel(boolean isInvalid) {
         if (isInvalid) {
             invalidDirectionLabel.setText("Invalid directions entered");
-        }
-        else {
+        } else {
             invalidDirectionLabel.setText(" ");
         }
     }
@@ -149,14 +143,11 @@ public class TrafficSystemGUI {
         int nextPassageTime;
         if (trafficLightNumber == 1) {
             nextPassageTime = T1.getNextPassageTime(currentTime);
-        }
-        else if (trafficLightNumber == 2) {
+        } else if (trafficLightNumber == 2) {
             nextPassageTime = T2.getNextPassageTime(currentTime);
-        }
-        else if (trafficLightNumber == 3) {
+        } else if (trafficLightNumber == 3) {
             nextPassageTime = T3.getNextPassageTime(currentTime);
-        }
-        else {
+        } else {
             nextPassageTime = currentTime;
         }
         return nextPassageTime;
@@ -167,10 +158,10 @@ public class TrafficSystemGUI {
     }
 
     public static void main(String args[]) {
-        TrafficSystemGUI gui = new TrafficSystemGUI();
+        TrafficSystemGUI trafficSystem = new TrafficSystemGUI();
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                gui.showWindow();
+                trafficSystem.showWindow();
             }
         });
     }
