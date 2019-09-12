@@ -7,8 +7,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 import javax.swing.table.DefaultTableModel;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 import java.awt.event.*;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -16,13 +15,13 @@ import java.awt.Dimension;
 
 public class TrafficSystemGUI {
     int currentTime;
-    private int lastVehicleId;
+    int lastVehicleId;
     TrafficSignal T1;
     TrafficSignal T2;
     TrafficSignal T3;
     DefaultTableModel vehicleModel;
     DefaultTableModel trafficLightModel;
-    private Lock lock; 
+    private Semaphore semaphore; 
     static String[] vehicleStatusColumnNames = {"Vehicle", "Source", "Destination", "Status", "Remaining Time"};
     static String[] trafficLightStatusColumnNames = {"Traffic Light", "Status", "Time"};
 
@@ -34,30 +33,6 @@ public class TrafficSystemGUI {
     JTextField destination;
     JButton addVehicleButton;
     JLabel invalidDirectionLabel;
-
-    public void acquireLock() {
-        lock.lock();
-    }
-
-    public void releaseLock() {
-        lock.unlock();
-    }
-
-    public int getNewVehicleId() {
-        lastVehicleId++;
-        return lastVehicleId;
-    }
-
-    public void vehicleAdded(ActionEvent vehicleAddedEvent) {
-        String command = vehicleAddedEvent.getActionCommand();
-        // disable submit button
-        if (command.equals("submit")) {
-            new AddVehicleWorker(this, source.getText(), destination.getText()).execute();
-            source.setText("");
-            destination.setText("");
-        }
-        return;
-    }
     
     public TrafficSystemGUI() {
         currentTime = 0;
@@ -65,6 +40,7 @@ public class TrafficSystemGUI {
         T1 = new TrafficSignal(1);
         T2 = new TrafficSignal(2);
         T3 = new TrafficSignal(3);
+        semaphore = new Semaphore(1);
         lock = new ReentrantLock();
         
         frame = new JFrame("Automatic Traffic System");
@@ -137,8 +113,31 @@ public class TrafficSystemGUI {
         frame.setVisible(false);
     }
 
-    public void setInvalidDirectionLabel(boolean isValid) {
-        if (!isValid) {
+    public void acquireSemaphore() {
+        semaphore.acquire();
+    }
+
+    public void releaseSemaphore() {
+        semaphore.release();
+    }
+
+    public int getNewVehicleId() {
+        lastVehicleId++;
+        return lastVehicleId;
+    }
+
+    public void vehicleAdded(ActionEvent vehicleAddedEvent) {
+        String command = vehicleAddedEvent.getActionCommand();
+        if (command.equals("submit")) {
+            new AddVehicleWorker(this, source.getText(), destination.getText()).execute();
+            source.setText("");
+            destination.setText("");
+        }
+        return;
+    }
+
+    public void setInvalidDirectionLabel(boolean isInvalid) {
+        if (isInvalid) {
             invalidDirectionLabel.setText("Invalid directions entered");
         }
         else {

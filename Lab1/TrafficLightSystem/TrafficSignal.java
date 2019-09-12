@@ -8,16 +8,16 @@ public class TrafficSignal {
     }
 
     public int getNextPassageTime(int currentTime) {
-        System.out.println("Checking current and next passage time before updation "+currentTime+" , "+nextPassageTime);
+        // System.out.println("Checking current and next passage time before updation "+currentTime+" , "+nextPassageTime);
         if (currentTime > nextPassageTime){
-            if((currentTime % 180) < 60 * trafficLightNumber ){
+            if((60 * trafficLightNumber) - (currentTime%180) > 6){
                 nextPassageTime =  currentTime;
             }
             else{
                 nextPassageTime = (currentTime / 180 + 1) * 180 + (trafficLightNumber - 1) * 60;
             } 
         }
-        System.out.println("Checking current and next passage time after updation "+currentTime+" , "+nextPassageTime);
+        // System.out.println("Checking current and next passage time after updation "+currentTime+" , "+nextPassageTime);
         int allotedPassageTime = nextPassageTime;
         updateTrafficLightPassageTime();
         return allotedPassageTime;
@@ -27,11 +27,11 @@ public class TrafficSignal {
         int currentPassageTime = nextPassageTime;
         nextPassageTime = nextPassageTime + 6;
         int lowerBound = (trafficLightNumber - 1) * 60;
-        int upperBound = trafficLightNumber * 60 - 1; 
+        int upperBound = trafficLightNumber * 60 - 6; 
         if ((nextPassageTime % 180) < lowerBound || (nextPassageTime % 180) > upperBound) {
             int nextRangeStart = (currentPassageTime / 180 + 1) * 180;
             nextPassageTime = nextRangeStart + (trafficLightNumber - 1) * 60;
-            System.out.println("Exceed kiya naya next passage time : "+ nextPassageTime);
+            // System.out.println("Exceed kiya naya next passage time : "+ nextPassageTime);
         }
     }
 

@@ -79,14 +79,13 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         try {
             Vehicle newVehicle = get();
             if (newVehicle == null) {
-                System.out.println("Hi");
-                trafficSystemGUIReference.setInvalidDirectionLabel(false);
+                trafficSystemGUIReference.setInvalidDirectionLabel(true);
                 return;
             }
-            trafficSystemGUIReference.acquireLock();
+            trafficSystemGUIReference.acquireSemaphore();
             trafficSystemGUIReference.vehicleModel.addRow(newVehicle.getVehicleStatus());
-            trafficSystemGUIReference.setInvalidDirectionLabel(true);
-            trafficSystemGUIReference.releaseLock();
+            trafficSystemGUIReference.setInvalidDirectionLabel(false);
+            trafficSystemGUIReference.releaseSemaphore();
         }
         catch (InterruptedException e) {
             e.printStackTrace();

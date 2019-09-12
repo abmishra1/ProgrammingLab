@@ -1,5 +1,3 @@
-// import java.util.concurrent.BrokenBarrierException; 
-
 public class SealingUnit implements Runnable {
     public SealerTray tray;
     public boolean bottleReady;

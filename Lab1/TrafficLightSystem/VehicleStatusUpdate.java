@@ -9,7 +9,7 @@ public class VehicleStatusUpdate extends SwingWorker {
     }
     
     public void updateVehicleTable() {
-        trafficSystemGUIReference.acquireLock();
+        trafficSystemGUIReference.acquireSemaphore();
         int numberOfVehicles = trafficSystemGUIReference.vehicleStatusTable.getRowCount();
         for (int i = 0; i < numberOfVehicles; i++) {
             int previousRemainingTime = (int) trafficSystemGUIReference.vehicleStatusTable.getValueAt(i,4);
@@ -19,7 +19,7 @@ public class VehicleStatusUpdate extends SwingWorker {
                 trafficSystemGUIReference.vehicleStatusTable.setValueAt("Pass",i,3);
             }
         }
-        trafficSystemGUIReference.releaseLock();
+        trafficSystemGUIReference.releaseSemaphore();
     }
 
     public void updateTrafficSignalTable(){

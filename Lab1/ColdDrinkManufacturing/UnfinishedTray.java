@@ -1,10 +1,14 @@
+import java.util.concurrent.locks.*;
+
 public class UnfinishedTray {
-    int bottle1Count;
-    int bottle2Count;
+    private int bottle1Count;
+    private int bottle2Count;
+    private Lock retrievalLock; 
 
     public UnfinishedTray(int newBottle1Count, int newBottle2Count) {
         bottle1Count = newBottle1Count;
         bottle2Count = newBottle2Count;
+        retrievalLock = new ReentrantLock();
     } 
 
     private void decrementBottleCount(int bottleType) {
@@ -24,8 +28,8 @@ public class UnfinishedTray {
         return (bottle2Count > 0);
     }
 
-    public synchronized int takeBottle(int bottleType) {
-        // System.out.println("taking brand new bottle");
+    public int takeBottle(int bottleType) {
+        retrievalLock.lock();
         if (!isBottleAvailable(bottleType)) {
             int otherBottleType = (bottleType + 1) % 2;
             if (!isBottleAvailable(otherBottleType)) {
@@ -35,6 +39,7 @@ public class UnfinishedTray {
             return otherBottleType;
         }
         decrementBottleCount(bottleType);
+        retrievalLock.unlock();
         return bottleType;
     }
 }
