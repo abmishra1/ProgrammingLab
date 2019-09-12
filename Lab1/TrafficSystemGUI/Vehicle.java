@@ -3,19 +3,19 @@ public class Vehicle {
     private char source;
     private char destination;
     private String status;
-    private int passageTime;
+    private int currentWaitingTime;
 
-    public Vehicle(int newvehicleNumber, String newSource, String newDestination, String newStatus,
-            int newPassageTime) {
-        vehicleNumber = newvehicleNumber;
+    public Vehicle(int newVehicleNumber, String newSource, String newDestination, String newStatus,
+            int initialWaitingTime) {
+        vehicleNumber = newVehicleNumber;
         source = newSource.charAt(0);
         destination = newDestination.charAt(0);
         status = newStatus;
-        passageTime = newPassageTime;
+        currentWaitingTime = initialWaitingTime;
     }
 
     public Object[] getVehicleStatus() {
-        Object[] vehicleStatus = { vehicleNumber, source, destination, status, passageTime };
+        Object[] vehicleStatus = { vehicleNumber, source, destination, status, currentWaitingTime };
         return vehicleStatus;
     }
 }

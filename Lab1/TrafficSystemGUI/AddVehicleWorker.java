@@ -56,8 +56,8 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         return -1;
     }
 
-    public static String getVehicleStatus(int passageTime) {
-        if (passageTime == 0)
+    public static String getVehicleStatus(int waitingTime) {
+        if (waitingTime == 0)
             return "Pass";
         return "Wait";
     }
@@ -68,14 +68,13 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         if (!isFlowValid(sourceDirection, destinationDirection)) {
             return null;
         }
-        
+        trafficSystemGUI.getNewVehicleSemaphore();
         int newVehicleId = trafficSystemGUI.getNewVehicleId();
         int trafficLightNumber = getTrafficSignalNumber(sourceDirection, destinationDirection);
-        // Allot next passing time for this vehicle and calc waiting time from that
-        int passageTime = trafficSystemGUI.getNextPassageTime(trafficLightNumber);
-        int waitingTime = passageTime - trafficSystemGUI.currentTime;
-        String vehicleStatus = getVehicleStatus(passageTime);
-
+        int waitingTime = trafficSystemGUI.getWaitingTime(trafficLightNumber);
+        String vehicleStatus = getVehicleStatus(waitingTime);
+        trafficSystemGUI.releaseNewVehicleSemaphore();
+        
         Vehicle newVehicle = new Vehicle(newVehicleId, sourceDirection, destinationDirection, vehicleStatus,
                 waitingTime);
         return newVehicle;

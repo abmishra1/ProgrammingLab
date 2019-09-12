@@ -8,6 +8,8 @@ import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 import javax.swing.table.DefaultTableModel;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.awt.event.*;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -20,7 +22,9 @@ public class TrafficSystemGUI {
     private TrafficSignal T3;
     DefaultTableModel vehicleModel;
     DefaultTableModel trafficLightModel;
+    private ReadWriteLock timeLock; // Reader's writer's lock
     private Semaphore semaphore;
+    private Semaphore newVehicleSemaphore;
     private static String[] vehicleStatusColumnNames = { "Vehicle", "Source", "Destination", "Status",
             "Remaining Time" };
     private static String[] trafficLightStatusColumnNames = { "Traffic Light", "Status", "Time" };
@@ -41,6 +45,8 @@ public class TrafficSystemGUI {
         T2 = new TrafficSignal(2);
         T3 = new TrafficSignal(3);
         semaphore = new Semaphore(1);
+        newVehicleSemaphore = new Semaphore(1);
+        timeLock = new ReentrantReadWriteLock();
 
         frame = new JFrame("Automatic Traffic System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -81,7 +87,9 @@ public class TrafficSystemGUI {
         addVehicleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent vehicleAddedEvent) {
+                getTimeReadLock();
                 new AddVehicleWorker(selfRef, source.getText(), destination.getText()).execute();
+                releaseTimeReadLock();
                 source.setText("");
                 destination.setText("");
             }
@@ -89,9 +97,11 @@ public class TrafficSystemGUI {
 
         javax.swing.Timer timer = new javax.swing.Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent vehicleStatusUpdateEvent) {
-                currentTime++;
-                VehicleStatusUpdate vehicleStatusUpdtaeInstance = new VehicleStatusUpdate(selfRef);
-                vehicleStatusUpdtaeInstance.execute();
+                incrementCurrentTime();
+                getTimeReadLock();
+                VehicleStatusUpdate vehicleStatusUpdateInstance = new VehicleStatusUpdate(selfRef);
+                vehicleStatusUpdateInstance.execute();
+                releaseTimeReadLock();
             }
         });
         timer.start();
@@ -122,6 +132,32 @@ public class TrafficSystemGUI {
         semaphore.release();
     }
 
+    public void getTimeReadLock() {
+        timeLock.readLock().lock();
+    }
+
+    public void releaseTimeReadLock() {
+        timeLock.readLock().unlock();
+    }
+
+    public void incrementCurrentTime() {
+        timeLock.writeLock().lock();
+        currentTime++;
+        timeLock.writeLock().unlock();
+    }
+
+    public void getNewVehicleSemaphore() {
+        try {
+            newVehicleSemaphore.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void releaseNewVehicleSemaphore() {
+        newVehicleSemaphore.release();
+    }
+
     public int getNewVehicleId() {
         lastVehicleId++;
         return lastVehicleId;
@@ -135,7 +171,7 @@ public class TrafficSystemGUI {
         }
     }
 
-    public int getNextPassageTime(int trafficLightNumber) {
+    public int getWaitingTime(int trafficLightNumber) {
         int nextPassageTime;
         if (trafficLightNumber == 1) {
             nextPassageTime = T1.getNextPassageTime(currentTime);
@@ -146,7 +182,8 @@ public class TrafficSystemGUI {
         } else {
             nextPassageTime = currentTime;
         }
-        return nextPassageTime;
+        int waitingTime = nextPassageTime - currentTime;
+        return waitingTime;
     }
 
     public void showWindow() {
