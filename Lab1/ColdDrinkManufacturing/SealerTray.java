@@ -1,86 +1,48 @@
 import java.util.concurrent.locks.*;
+import java.util.LinkedList; 
+import java.util.Queue; 
 
 public class SealerTray {
-    private int bottle1Count;
-    private int bottle2Count;
-    private Lock lock; 
+    private Queue<Integer> queue;
+    private Lock lock;
 
-    public SealerTray(int newBottle1Count, int newBottle2Count) {
-        bottle1Count = newBottle1Count;
-        bottle2Count = newBottle2Count;
+    public SealerTray() {
+        queue = new LinkedList<>();
         lock = new ReentrantLock();
     }
 
-    private void acquireLock() {
-        lock.lock();
+    private boolean isTrayEmpty() {
+        return (queue.size() == 0);
     }
-
-    private void releaseLock() {
-        lock.unlock();
-    }
-
-    private boolean isBottleAvailable(int bottleType) {
-        if (bottleType == 1) {
-            return (bottle1Count > 0);
-        }
-        else {
-            return (bottle2Count > 0);
-        }
-    }
-
-    private void decrementBottleCount(int bottleType) {
-        if (bottleType == 1) {
-            bottle1Count--;
-        }
-        else {
-            bottle2Count--;
-        }
-        return;
-    } 
 
     public int takeBottle() {
-        acquireLock();
-        // give priority to bottle1
-        int bottleType = 1;
-        if (!isBottleAvailable(bottleType)) {
-            int otherBottleType = (bottleType + 1) % 2;
-            if (!isBottleAvailable(otherBottleType)) {
-                releaseLock();
-                return -1;
-            }
-            else {
-                decrementBottleCount(otherBottleType);
-                releaseLock();
-                return otherBottleType;
-            }
+        lock.lock();
+        if (isTrayEmpty()) {
+            lock.unlock();
+            return -1;
         }
-        decrementBottleCount(bottleType);
-        releaseLock();
-        return bottleType;
+        else {
+            int newBottle = queue.peek();
+            queue.remove();
+            lock.unlock();
+            return newBottle;
+        }
     }
 
-    public boolean isFull() {
-        return (bottle1Count + bottle2Count >= 2);
+    private boolean isTrayFull() {
+        return (queue.size() == 2);
     }
 
     public boolean storeBottle(int bottleType) {
-        acquireLock();
-        if (isFull()) {
-            releaseLock();
+        lock.lock();
+        if (isTrayFull()) {
+            lock.unlock();
             return false;
         }
-        if (bottleType == 1) {
-            bottle1Count++;
-        }
         else {
-            bottle2Count++;
+            queue.add(bottleType);
+            lock.unlock();
+            return true;
         }
-        releaseLock();
-        return true;
-    }
-
-    public void printTray() {
-        System.out.println("B1 in Sealer's tray: " + bottle1Count);
-        System.out.println("B2 in Sealer's tray: " + bottle2Count);
     }
 }

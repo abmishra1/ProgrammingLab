@@ -10,7 +10,7 @@ public class SealingUnit implements Runnable {
     private int sealedBottle2Count;
 
     public SealingUnit(ColdDrinkManufacturing newColdDrinkManufacturing) {
-        tray = new SealerTray(0, 0);
+        tray = new SealerTray();
         bottleReady = false;
         processingBottle = null;
         bottleTypeUnfinished = 0;
