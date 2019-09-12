@@ -25,7 +25,9 @@ public class UnfinishedTray {
         if (bottleType == 1) {
             return (bottle1Count > 0);
         }
-        return (bottle2Count > 0);
+        else {
+            return (bottle2Count > 0);
+        }
     }
 
     public int takeBottle(int bottleType) {
@@ -33,9 +35,11 @@ public class UnfinishedTray {
         if (!isBottleAvailable(bottleType)) {
             int otherBottleType = (bottleType + 1) % 2;
             if (!isBottleAvailable(otherBottleType)) {
+                retrievalLock.unlock();
                 return -1;
             }
             decrementBottleCount(otherBottleType);
+            retrievalLock.unlock();
             return otherBottleType;
         }
         decrementBottleCount(bottleType);

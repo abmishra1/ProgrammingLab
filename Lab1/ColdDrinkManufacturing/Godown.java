@@ -1,8 +1,8 @@
 import java.util.concurrent.locks.*;
 
 public class Godown {
-    int bottle1Count;
-    int bottle2Count;
+    private int bottle1Count;
+    private int bottle2Count;
     private Lock storageLock;
 
     public Godown() {
@@ -15,9 +15,10 @@ public class Godown {
         storageLock.lock();
         if (bottleType == 1) {
             bottle1Count++;
-            return true;
         }
-        bottle2Count++;
+        else {
+            bottle2Count++;
+        }
         storageLock.unlock();
         return true;
     }
@@ -26,6 +27,8 @@ public class Godown {
         if (bottleType == 1) {
             return bottle1Count;
         }
-        return bottle2Count;
+        else {
+            return bottle2Count;
+        }
     }
 }

@@ -1,9 +1,8 @@
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.*;
 
 public class PackagerTray {
-    public int bottle1Count;
-    public int bottle2Count;
+    private int bottle1Count;
+    private int bottle2Count;
     private Lock lock;
 
     public PackagerTray(int newBottle1Count, int newBottle2Count) {
@@ -12,11 +11,11 @@ public class PackagerTray {
         lock = new ReentrantLock();
     }
 
-    public void acquireLock() {
+    private void acquireLock() {
         lock.lock();
     }
 
-    public void releaseLock() {
+    private void releaseLock() {
         lock.unlock();
     }
 
@@ -39,15 +38,19 @@ public class PackagerTray {
     } 
 
     public int takeBottle(int bottleType) {
+        acquireLock();
         if (!isBottleAvailable(bottleType)) {
             int otherBottleType = (bottleType + 1) % 2;
             if (!isBottleAvailable(otherBottleType)) {
+                releaseLock();
                 return -1;
             }
             decrementBottleCount(otherBottleType);
+            releaseLock();
             return otherBottleType;
         }
         decrementBottleCount(bottleType);
+        releaseLock();
         return bottleType;
     }
 
@@ -60,16 +63,22 @@ public class PackagerTray {
     }
 
     public boolean storeBottle(int bottleType) {
+        acquireLock();
         if (bottleType == 1) {
-            if (isBottle1TrayFull())
+            if (isBottle1TrayFull()) {
+                releaseLock();
                 return false;
+            }
             bottle1Count++;
         }
         else {
-            if (isBottle2TrayFull())
+            if (isBottle2TrayFull()) {
+                releaseLock();
                 return false;
+            }
             bottle2Count++;
         }
+        releaseLock();
         return true;
     }
 

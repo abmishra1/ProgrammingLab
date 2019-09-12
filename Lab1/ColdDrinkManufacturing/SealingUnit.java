@@ -1,21 +1,19 @@
 public class SealingUnit implements Runnable {
     public SealerTray tray;
-    public boolean bottleReady;
-    public int bottleTypeUnfinished;
-    public int bottleTypeTray;
-    public Bottle processingBottle;
+    private boolean bottleReady;
+    private int bottleTypeUnfinished;
+    private Bottle processingBottle;
     public PackagingUnit packagingUnit;
-    public ColdDrinkManufacturing coldDrinkManufacturing;
+    private ColdDrinkManufacturing coldDrinkManufacturing;
 
-    public int sealedBottle1Count;
-    public int sealedBottle2Count;
+    private int sealedBottle1Count;
+    private int sealedBottle2Count;
 
     public SealingUnit(ColdDrinkManufacturing newColdDrinkManufacturing) {
         tray = new SealerTray(0, 0);
         bottleReady = false;
-        bottleTypeUnfinished = 0;
-        bottleTypeTray = 1;
         processingBottle = null;
+        bottleTypeUnfinished = 0;
         sealedBottle1Count = 0;
         sealedBottle2Count = 0;
         coldDrinkManufacturing = newColdDrinkManufacturing;
@@ -32,8 +30,7 @@ public class SealingUnit implements Runnable {
     }
 
     public void run() {
-        // System.out.println("Sealer's time is " + coldDrinkManufacturing.runTime2);
-        
+        // System.out.println("Sealer's time is " + coldDrinkManufacturing.sealerTime);
         if (processingBottle != null && processingBottle.deliveryTime <= coldDrinkManufacturing.currentTime) {
             bottleReady = true;
             if (processingBottle.deliveryTime == coldDrinkManufacturing.currentTime) {
@@ -45,9 +42,7 @@ public class SealingUnit implements Runnable {
             boolean bottleDelivered;
             if (processingBottle.state == 1) {
                 // put in Packager's tray
-                packagingUnit.tray.acquireLock();
                 bottleDelivered = packagingUnit.tray.storeBottle(processingBottle.type);
-                packagingUnit.tray.releaseLock();
             }
             else {
                 // add in sealing unit checking needs to be done
@@ -60,32 +55,37 @@ public class SealingUnit implements Runnable {
         
         if (processingBottle == null) {
             // attempt to take from sealer tray, if false then go to unfinished
-            tray.acquireLock();
-            int newBottleType = tray.takeBottle(bottleTypeTray);
-            tray.releaseLock();
+            int newBottleType = tray.takeBottle();
 
-            
             if (newBottleType == -1) {
-                if (coldDrinkManufacturing.runTime1 == coldDrinkManufacturing.runTime2) {
+                if (coldDrinkManufacturing.packagerTime == coldDrinkManufacturing.sealerTime) {
                     return;
                 }
                 newBottleType = coldDrinkManufacturing.unfinishedTray.takeBottle(bottleTypeUnfinished);
                 if (newBottleType != -1) {
-                    processingBottle = new Bottle(newBottleType, 1, coldDrinkManufacturing.currentTime + 3); // first argument represnt type change accordingly
-                    coldDrinkManufacturing.runTime2 += 3;
+                    processingBottle = new Bottle(newBottleType, 1, coldDrinkManufacturing.currentTime + 3);
+                    coldDrinkManufacturing.sealerTime += 3;
                     bottleTypeUnfinished = (newBottleType + 1) % 2;
                     // System.out.println("Global se sealer ne liya");
                 }
                 else {
-                    coldDrinkManufacturing.runTime2++;
+                    coldDrinkManufacturing.sealerTime++;
                 }
             }
             else {
-                processingBottle = new Bottle(newBottleType, 0, coldDrinkManufacturing.currentTime + 3); // first argument represnt type change accordingly
-                coldDrinkManufacturing.runTime2 += 3;
-                // bottleTypeTray = (newBottleType + 1) % 2;
+                processingBottle = new Bottle(newBottleType, 0, coldDrinkManufacturing.currentTime + 3);
+                coldDrinkManufacturing.sealerTime += 3;
                 // System.out.println("Tray se sealer ne liya");
             }
+        }
+    }
+
+    public int getBottleCount(int bottleType) {
+        if (bottleType == 1) {
+            return sealedBottle1Count;
+        }
+        else {
+            return sealedBottle2Count;
         }
     }
 }

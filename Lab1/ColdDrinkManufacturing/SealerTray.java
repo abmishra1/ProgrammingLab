@@ -1,5 +1,4 @@
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.*;
 
 public class SealerTray {
     private int bottle1Count;
@@ -12,23 +11,21 @@ public class SealerTray {
         lock = new ReentrantLock();
     }
 
-    public void acquireLock() {
+    private void acquireLock() {
         lock.lock();
     }
 
-    public void releaseLock() {
+    private void releaseLock() {
         lock.unlock();
     }
-
-    // public boolean isEmpty() {
-    //     return (bottle1Count == 0 && bottle2Count == 0);
-    // }
 
     private boolean isBottleAvailable(int bottleType) {
         if (bottleType == 1) {
             return (bottle1Count > 0);
         }
-        return (bottle2Count > 0);
+        else {
+            return (bottle2Count > 0);
+        }
     }
 
     private void decrementBottleCount(int bottleType) {
@@ -41,16 +38,24 @@ public class SealerTray {
         return;
     } 
 
-    public int takeBottle(int bottleType) {
+    public int takeBottle() {
+        acquireLock();
+        // give priority to bottle1
+        int bottleType = 1;
         if (!isBottleAvailable(bottleType)) {
             int otherBottleType = (bottleType + 1) % 2;
             if (!isBottleAvailable(otherBottleType)) {
+                releaseLock();
                 return -1;
             }
-            decrementBottleCount(otherBottleType);
-            return otherBottleType;
+            else {
+                decrementBottleCount(otherBottleType);
+                releaseLock();
+                return otherBottleType;
+            }
         }
         decrementBottleCount(bottleType);
+        releaseLock();
         return bottleType;
     }
 
@@ -59,13 +64,18 @@ public class SealerTray {
     }
 
     public boolean storeBottle(int bottleType) {
-        if (isFull()) return false;
+        acquireLock();
+        if (isFull()) {
+            releaseLock();
+            return false;
+        }
         if (bottleType == 1) {
             bottle1Count++;
         }
         else {
             bottle2Count++;
         }
+        releaseLock();
         return true;
     }
 
