@@ -19,6 +19,7 @@ public class VehicleStatusUpdate extends SwingWorker {
                 trafficSystemGUI.vehicleStatusTable.setValueAt("Pass", i, 3);
             }
         }
+        trafficSystemGUI.setInvalidDirectionLabel(false);
         trafficSystemGUI.releaseSemaphore();
     }
 
@@ -44,8 +45,9 @@ public class VehicleStatusUpdate extends SwingWorker {
 
     @Override
     protected void done() {
+        trafficSystemGUI.getTimeReadLock();
         updateVehicleTable();
         updateTrafficSignalTable();
-        trafficSystemGUI.setInvalidDirectionLabel(false);
+        trafficSystemGUI.releaseTimeReadLock();
     }
 }

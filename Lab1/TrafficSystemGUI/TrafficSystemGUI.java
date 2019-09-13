@@ -33,8 +33,9 @@ public class TrafficSystemGUI {
     private JPanel pane;
     JTable vehicleStatusTable;
     JTable trafficLightStatusTable;
-    private JTextField source;
-    private JTextField destination;
+    private JTextField[] batchInputBoxes;
+    static String[] sourceLabels = { "South", "West", "East", "South", "East", "West" };
+    static String[] destinationLabels = { "East", "South", "West", "West", "South", "East" };
     private JButton addVehicleButton;
     private JLabel invalidDirectionLabel;
 
@@ -75,49 +76,72 @@ public class TrafficSystemGUI {
         JScrollPane scrollPane2 = new JScrollPane(vehicleStatusTable);
         pane.add(scrollPane2);
 
-        JPanel bottomPanel = new JPanel();
-        source = new JTextField(16);
-        source.setMaximumSize(source.getPreferredSize());
-        destination = new JTextField(16);
-        destination.setMaximumSize(destination.getPreferredSize());
-        addVehicleButton = new JButton("Add Vehicle");
-
+        addBatchInputBoxes();
         final TrafficSystemGUI selfRef = this;
-
-        addVehicleButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent vehicleAddedEvent) {
-                getTimeReadLock();
-                new AddVehicleWorker(selfRef, source.getText(), destination.getText()).execute();
-                releaseTimeReadLock();
-                source.setText("");
-                destination.setText("");
-            }
-        });
-
         javax.swing.Timer timer = new javax.swing.Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent vehicleStatusUpdateEvent) {
                 incrementCurrentTime();
-                getTimeReadLock();
                 VehicleStatusUpdate vehicleStatusUpdateInstance = new VehicleStatusUpdate(selfRef);
                 vehicleStatusUpdateInstance.execute();
-                releaseTimeReadLock();
             }
         });
         timer.start();
 
-        bottomPanel.add(source);
-        bottomPanel.add(destination);
-        bottomPanel.add(addVehicleButton);
-        pane.add(bottomPanel);
+        frame.add(pane);
+        frame.setSize(720, 720);
+        frame.setVisible(false);
+    }
+
+    private void addBatchInputBoxes() {
+        batchInputBoxes = new JTextField[6];
+        JLabel[] batchInputLabels = new JLabel[6];
+        JPanel rowPanel;
+        for (int i = 0; i < 6; i++) {
+            rowPanel = new JPanel();
+            batchInputLabels[i] = new JLabel(sourceLabels[i] + " to " + destinationLabels[i]);
+            batchInputBoxes[i] = new JTextField("0", 8);
+            batchInputLabels[i].setPreferredSize(new Dimension(100, 19));
+            rowPanel.add(batchInputLabels[i]);
+            rowPanel.add(batchInputBoxes[i]);
+            pane.add(rowPanel);
+        }
+        
+        addVehicleButton = new JButton("Add Vehicle");
+        final TrafficSystemGUI selfRef = this;
+        addVehicleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent vehicleAddedEvent) {
+                for (int i = 0; i < 6; i++) {
+                    try {
+                        int newVehicleCount =  Integer.parseInt(batchInputBoxes[i].getText());
+                        for (int j = 0; j < newVehicleCount; j++) {
+                            new AddVehicleWorker(selfRef, sourceLabels[i], destinationLabels[i]).execute();
+                        }
+                    }
+                    catch (Exception error) {
+                        setInvalidDirectionLabel(true);
+                    }
+                }
+                for (int i = 0; i < 6; i++) {
+                    batchInputBoxes[i].setText("0");
+                }
+            }
+        });
+        addVehicleButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        pane.add(addVehicleButton);
 
         invalidDirectionLabel = new JLabel(" ");
         invalidDirectionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         pane.add(invalidDirectionLabel);
+        return;
+    }
 
-        frame.add(pane);
-        frame.setSize(720, 720);
-        frame.setVisible(false);
+    public void getTimeReadLock() {
+        timeLock.readLock().lock();
+    }
+
+    public void releaseTimeReadLock() {
+        timeLock.readLock().unlock();
     }
 
     public void acquireSemaphore() {
@@ -132,14 +156,6 @@ public class TrafficSystemGUI {
         semaphore.release();
     }
 
-    public void getTimeReadLock() {
-        timeLock.readLock().lock();
-    }
-
-    public void releaseTimeReadLock() {
-        timeLock.readLock().unlock();
-    }
-
     public void incrementCurrentTime() {
         timeLock.writeLock().lock();
         currentTime++;
@@ -149,6 +165,7 @@ public class TrafficSystemGUI {
     public void getNewVehicleSemaphore() {
         try {
             newVehicleSemaphore.acquire();
+            getTimeReadLock();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -156,6 +173,7 @@ public class TrafficSystemGUI {
 
     public void releaseNewVehicleSemaphore() {
         newVehicleSemaphore.release();
+        releaseTimeReadLock();
     }
 
     public int getNewVehicleId() {
@@ -164,14 +182,16 @@ public class TrafficSystemGUI {
     }
 
     public void setInvalidDirectionLabel(boolean isInvalid) {
+        // return;
+        // // REMOVE THIS RETURN
         if (isInvalid) {
-            invalidDirectionLabel.setText("Invalid directions entered");
+            invalidDirectionLabel.setText("Skipping invalid counts");
         } else {
             invalidDirectionLabel.setText(" ");
         }
     }
 
-    public int getWaitingTime(int trafficLightNumber) {
+    public int getNextPassageTime(int trafficLightNumber) {
         int nextPassageTime;
         if (trafficLightNumber == 1) {
             nextPassageTime = T1.getNextPassageTime(currentTime);
@@ -182,8 +202,7 @@ public class TrafficSystemGUI {
         } else {
             nextPassageTime = currentTime;
         }
-        int waitingTime = nextPassageTime - currentTime;
-        return waitingTime;
+        return nextPassageTime;
     }
 
     public void showWindow() {
