@@ -1,6 +1,7 @@
 public class TrafficSignal {
     private int trafficLightNumber;
     private int nextPassageTime;
+    private static int cycleDuration = 180;
 
     public TrafficSignal(int newtrafficLightNumber) {
         trafficLightNumber = newtrafficLightNumber;
@@ -9,10 +10,12 @@ public class TrafficSignal {
 
     public int getNextPassageTime(int currentTime) {
         if (currentTime > nextPassageTime) {
-            if ((60 * trafficLightNumber) - (currentTime % 180) > 6) {
+            if ((60 * trafficLightNumber) - (currentTime % cycleDuration) > 6) {
                 nextPassageTime = currentTime;
-            } else {
-                nextPassageTime = (currentTime / 180 + 1) * 180 + (trafficLightNumber - 1) * 60;
+            }
+            else {
+                int nextRangeStart = (currentTime / cycleDuration + 1) * cycleDuration;
+                nextPassageTime = nextRangeStart + (trafficLightNumber - 1) * 60;
             }
         }
         int allotedPassageTime = nextPassageTime;
@@ -25,8 +28,8 @@ public class TrafficSignal {
         nextPassageTime = nextPassageTime + 6;
         int lowerBound = (trafficLightNumber - 1) * 60;
         int upperBound = trafficLightNumber * 60 - 6;
-        if ((nextPassageTime % 180) < lowerBound || (nextPassageTime % 180) > upperBound) {
-            int nextRangeStart = (currentPassageTime / 180 + 1) * 180;
+        if ((nextPassageTime % cycleDuration) < lowerBound || (nextPassageTime % cycleDuration) > upperBound) {
+            int nextRangeStart = (currentPassageTime / cycleDuration + 1) * cycleDuration;
             nextPassageTime = nextRangeStart + (trafficLightNumber - 1) * 60;
         }
     }
