@@ -1,6 +1,6 @@
-import java.util.*;
-
+// Class representing the inventory of the store 
 public class Inventory {
+    // House the 4 item types
     private InventoryItem smallShirts;
     private InventoryItem mediumShirts;
     private InventoryItem largeShirts;
@@ -13,6 +13,7 @@ public class Inventory {
         caps = new InventoryItem(initialStockC, this);
     }
 
+    // Function to return printable string of the overall stock in the inventory
     public String getOverallStock() {
         String overallStock = "Inventory ";
         overallStock += ("S: " + smallShirts.getCurrentStock()) + " ";
@@ -22,6 +23,8 @@ public class Inventory {
         return overallStock;
     }
 
+    // Function to segragate orders by item type and
+    // send to corresponding sub-inventory to actually process
     public void processOrder(Order order) {
         switch (order.getItemType()) {
             case 'S':

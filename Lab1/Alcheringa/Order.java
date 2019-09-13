@@ -1,3 +1,4 @@
+// Class for representing one order thereby for one item type
 public class Order {
     private int orderNumber;
     private char itemType;
