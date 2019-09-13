@@ -31,34 +31,37 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         return "Wait";
     }
 
+    // AddVehicleWorker.java
     @Override
     protected Vehicle doInBackground() throws Exception {
-        // Generate vehicle object
+        // Generating vehicle object, take a semaphore
         trafficSystemGUI.getNewVehicleSemaphore();
-
+        // serialised ID allotment
         int newVehicleId = trafficSystemGUI.getNewVehicleId();
         int trafficLightNumber = getTrafficSignalNumber(sourceDirection, destinationDirection);
+        // serialised passage time allotment
         int passageTime = trafficSystemGUI.getNextPassageTime(trafficLightNumber);
         String vehicleStatus = getVehicleStatus(passageTime);
         Vehicle newVehicle = new Vehicle(newVehicleId, sourceDirection, destinationDirection, vehicleStatus,
         passageTime);
-
+        // Vehicle is now ready to be added in the table, release semaphore
         trafficSystemGUI.releaseNewVehicleSemaphore();
         return newVehicle;
     }
 
+    // AddVehicleWorker.java
     @Override
     protected void done() {
         try {
             Vehicle newVehicle = get();
-            // get synchronized access to the vehicle table data and
-            // append this new vehicle
-            trafficSystemGUI.acquireSemaphore();
+            // Need two locks: 1. use currentTime to calculate
+            // initial waiting time, 2. to append to vehicle list
+            trafficSystemGUI.acquireTableSemaphore();
             trafficSystemGUI.getTimeReadLock();
             Object[] newRow = newVehicle.getVehicleStatus(trafficSystemGUI.currentTime);
             trafficSystemGUI.vehicleModel.addRow(newRow);
             trafficSystemGUI.releaseTimeReadLock();
-            trafficSystemGUI.releaseSemaphore();
+            trafficSystemGUI.releaseTableSemaphore();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {

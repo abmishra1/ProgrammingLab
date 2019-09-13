@@ -23,7 +23,7 @@ public class TrafficSystemGUI {
     DefaultTableModel vehicleModel;
     DefaultTableModel trafficLightModel;
     private ReadWriteLock timeLock; // Reader's writer's lock
-    private Semaphore semaphore;
+    private Semaphore tableSemaphore;
     private Semaphore newVehicleSemaphore;
     private static String[] vehicleStatusColumnNames = { "Vehicle", "Source", "Destination", "Status",
             "Remaining Time" };
@@ -45,7 +45,7 @@ public class TrafficSystemGUI {
         T1 = new TrafficSignal(1);
         T2 = new TrafficSignal(2);
         T3 = new TrafficSignal(3);
-        semaphore = new Semaphore(1);
+        tableSemaphore = new Semaphore(1);
         newVehicleSemaphore = new Semaphore(1);
         timeLock = new ReentrantReadWriteLock();
 
@@ -144,19 +144,21 @@ public class TrafficSystemGUI {
         timeLock.readLock().unlock();
     }
 
-    public void acquireSemaphore() {
+    public void acquireTableSemaphore() {
         try {
-            semaphore.acquire();
+            tableSemaphore.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void releaseSemaphore() {
-        semaphore.release();
+    public void releaseTableSemaphore() {
+        tableSemaphore.release();
     }
 
     public void incrementCurrentTime() {
+        // Ensures no other reader is present before writing
+        // i.e. anyone currently reading currentTime should finish
         timeLock.writeLock().lock();
         currentTime++;
         timeLock.writeLock().unlock();
