@@ -1,8 +1,10 @@
 import javax.swing.SwingWorker;
 import java.util.concurrent.ExecutionException;
 
+// Worker to service exactly 1 new vehicle
+// Multiple instances of this class may be active at any given point in time
 public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
-    private TrafficSystemGUI trafficSystemGUI;
+    private TrafficSystemGUI trafficSystemGUI; // parent reference
     private String sourceDirection;
     private String destinationDirection;
 
@@ -12,9 +14,11 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         this.destinationDirection = destinationDirection;
     }
 
+    // Find the traffic signal this vehicle maps to. eg 1 for T1
     private static int getTrafficSignalNumber(String sourceDirection, String destinationDirection) {
+        // Three conflicting directions will have a corresponding light
         if (sourceDirection.equals("South") && destinationDirection.equals("East")) {
-            return 1;
+            return 1; 
         }
         if (sourceDirection.equals("West") && destinationDirection.equals("South")) {
             return 2;
@@ -22,16 +26,11 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         if (sourceDirection.equals("East") && destinationDirection.equals("West")) {
             return 3;
         }
+        // Vehicle belongs to flow which can directly pass, eg. West to East
         return -1;
     }
 
-    public static String getVehicleStatus(int waitingTime) {
-        if (waitingTime == 0)
-            return "Pass";
-        return "Wait";
-    }
-
-    // AddVehicleWorker.java
+    // Service new vehicle in backround worker
     @Override
     protected Vehicle doInBackground() throws Exception {
         // Generating vehicle object, take a semaphore
@@ -41,25 +40,27 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         int trafficLightNumber = getTrafficSignalNumber(sourceDirection, destinationDirection);
         // serialised passage time allotment
         int passageTime = trafficSystemGUI.getNextPassageTime(trafficLightNumber);
-        String vehicleStatus = getVehicleStatus(passageTime);
-        Vehicle newVehicle = new Vehicle(newVehicleId, sourceDirection, destinationDirection, vehicleStatus,
-        passageTime);
+        Vehicle newVehicle = new Vehicle(newVehicleId, sourceDirection, destinationDirection, passageTime);
         // Vehicle is now ready to be added in the table, release semaphore
         trafficSystemGUI.releaseNewVehicleSemaphore();
         return newVehicle;
     }
 
-    // AddVehicleWorker.java
     @Override
-    protected void done() {
+    protected void done() { // Update GUI table with a new row for this vehicle
         try {
             Vehicle newVehicle = get();
             // Need two locks: 1. use currentTime to calculate
-            // initial waiting time, 2. to append to vehicle list
+            // initial waiting time, 2. to append to vehicle status table
             trafficSystemGUI.acquireTableSemaphore();
             trafficSystemGUI.getTimeReadLock();
+
+            // Get initial status and waiting time for the vehicle
+            // after that updater thread will decrement each second
             Object[] newRow = newVehicle.getVehicleStatus(trafficSystemGUI.currentTime);
             trafficSystemGUI.vehicleModel.addRow(newRow);
+            
+            // Release semaphore after use
             trafficSystemGUI.releaseTimeReadLock();
             trafficSystemGUI.releaseTableSemaphore();
         } catch (InterruptedException e) {
