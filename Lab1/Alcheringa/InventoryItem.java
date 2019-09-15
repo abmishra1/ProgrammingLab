@@ -1,4 +1,7 @@
-// Class for managing one type of item in the inventory
+/* 
+    Author's Name : Abhinav Mishra, Nitin Kedia
+    Desription: Class for managing one type of item in the inventory
+*/
 public class InventoryItem {
     private int currentStock;
     private Inventory inventory; // parent reference

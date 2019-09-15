@@ -1,3 +1,6 @@
+/* 
+    Authors' Name : Abhinav Mishra, Nitin Kedia
+*/
 // class to represent a packaging unit
 public class PackagingUnit implements Runnable{
     // packager tray variable

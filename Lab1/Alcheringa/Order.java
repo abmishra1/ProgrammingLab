@@ -1,4 +1,7 @@
-// Class for representing one order thereby for one item type
+/* 
+    Author's Name : Abhinav Mishra, Nitin Kedia
+    Description: Class for representing one order thereby for one item type
+*/
 public class Order {
     private int orderNumber;
     private char itemType;

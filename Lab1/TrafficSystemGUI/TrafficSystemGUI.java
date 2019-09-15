@@ -1,3 +1,6 @@
+/* 
+    Authors' Name : Abhinav Mishra, Nitin Kedia
+*/
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTable;
@@ -222,16 +225,16 @@ public class TrafficSystemGUI {
     they will not race for id and passage time allocation */
     public void getNewVehicleSemaphore() {
         try {
-            newVehicleSemaphore.acquire();
             getTimeReadLock();
+            newVehicleSemaphore.acquire();
         } catch (InterruptedException error) {
             error.printStackTrace();
         }
     }
 
     public void releaseNewVehicleSemaphore() {
-        newVehicleSemaphore.release();
         releaseTimeReadLock();
+        newVehicleSemaphore.release();
     }
 
     public int getNewVehicleId() {

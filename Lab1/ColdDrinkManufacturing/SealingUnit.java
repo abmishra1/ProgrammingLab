@@ -1,3 +1,6 @@
+/* 
+    Authors' Name : Abhinav Mishra, Nitin Kedia
+*/
 // class to represent a sealing unit
 public class SealingUnit implements Runnable {
     // sealer tray variable

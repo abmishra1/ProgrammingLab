@@ -1,3 +1,6 @@
+/* 
+    Authors' Name : Abhinav Mishra, Nitin Kedia
+*/
 // Class representing a traffic signal
 public class TrafficSignal {
     private int trafficLightNumber;

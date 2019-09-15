@@ -1,3 +1,6 @@
+/* 
+    Authors' Name : Abhinav Mishra, Nitin Kedia
+*/
 // Class to represent a Vehicle
 public class Vehicle {
     // vehicleNumber is alloted from the system in serial

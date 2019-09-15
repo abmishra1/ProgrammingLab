@@ -1,3 +1,6 @@
+/* 
+    Author's Name : Abhinav Mishra, Nitin Kedia
+*/
 import javax.swing.SwingWorker;
 import java.util.concurrent.ExecutionException;
 
@@ -56,15 +59,16 @@ public class VehicleStatusUpdate extends SwingWorker {
         return 0;
     }
 
+    // VehicleStatusUpdate.java
     @Override
     protected void done() {
         // Take read lock on currentTime, so that
-        // it can increments only after a full update
+        // it can increment only after a full update
         trafficSystemGUI.getTimeReadLock();
         updateTrafficSignalTable();
         updateVehicleTable();
         trafficSystemGUI.setInvalidInputLabel(false);
-        // Update finished release sychronisation constructs
+        // Table update finished release sychronisation constructs
         trafficSystemGUI.releaseTimeReadLock();
     }
 }

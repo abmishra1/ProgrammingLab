@@ -1,4 +1,7 @@
-// Class representing the inventory of the store 
+/* 
+    Authors' Name : Abhinav Mishra, Nitin Kedia
+    Description: Class representing the inventory of the store 
+*/
 public class Inventory {
     // House the 4 item types
     private InventoryItem smallShirts;

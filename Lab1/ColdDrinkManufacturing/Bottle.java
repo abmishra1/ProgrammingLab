@@ -1,5 +1,7 @@
-/* This class represents a bottle instance */
-
+/* 
+    Authors' Name : Abhinav Mishra, Nitin Kedia
+    Description: This class represents a bottle instance
+*/  
 public class Bottle {
     // the bottle type 1 or 2
     public int type;
