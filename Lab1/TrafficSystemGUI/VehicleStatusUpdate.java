@@ -21,9 +21,13 @@ public class VehicleStatusUpdate extends SwingWorker {
         // Also change status from "Wait" to "Pass" if required
         int numberOfVehicles = trafficSystemGUI.vehicleStatusTable.getRowCount();
         for (int i = 0; i < numberOfVehicles; i++) {
+            int id = (int) trafficSystemGUI.vehicleStatusTable.getValueAt(i, 0);
             int previousRemainingTime = (int) trafficSystemGUI.vehicleStatusTable.getValueAt(i, 4);
             int newRemainingTime = Math.max(previousRemainingTime - 1, 0);
             trafficSystemGUI.vehicleStatusTable.setValueAt(newRemainingTime, i, 4);
+            // if (newRemainingTime == 0) {
+            //     System.out.println(id + " Pass at " + trafficSystemGUI.currentTime);
+            // }
             if (newRemainingTime <= 0) {
                 trafficSystemGUI.vehicleStatusTable.setValueAt("Pass", i, 3);
             }

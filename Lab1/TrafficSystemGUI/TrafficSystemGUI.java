@@ -11,6 +11,8 @@ import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
+
+import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -18,7 +20,12 @@ import java.awt.event.*;
 import java.awt.Component;
 import java.awt.Dimension;
 
+import java.util.LinkedList; 
+import java.util.Queue; 
+
 public class TrafficSystemGUI {
+    Queue<Input> queue;
+    int stopTime;
     // 1: Data elements required in backend
     int currentTime;
     private int lastVehicleId;
@@ -50,7 +57,7 @@ public class TrafficSystemGUI {
         // currentTime is initialised to -1 because the time increments it
         // first then update worker executes, so -1 prevents missing out 0-1 interval
         currentTime = -1;
-        lastVehicleId = 0;
+        lastVehicleId = -1;
         T1 = new TrafficSignal(1);
         T2 = new TrafficSignal(2);
         T3 = new TrafficSignal(3);
@@ -79,17 +86,40 @@ public class TrafficSystemGUI {
     public void run() {
         // Initialise the timer for periodic updates
         final TrafficSystemGUI selfRef = this;
-        javax.swing.Timer timer = new javax.swing.Timer(1000, new ActionListener() {
+        javax.swing.Timer timer = new javax.swing.Timer(500, new ActionListener() {
             public void actionPerformed(ActionEvent vehicleStatusUpdateEvent) {
+                if (currentTime >= stopTime) return;
+                
                 incrementCurrentTime(); // takes a writer's lock and increments currentTime
                 // This is done to so that updates and vehicle entry are conatined in 1 sec interval
                 VehicleStatusUpdate vehicleStatusUpdater = new VehicleStatusUpdate(selfRef);
                 vehicleStatusUpdater.execute();
+
+                // deuque
+                while (!queue.isEmpty()) {
+                    Input x = queue.peek();
+                    if (x.entryTime > currentTime) break;
+                    new AddVehicleWorker(selfRef, selfRef.getDir(x.source), selfRef.getDir(x.destination)).execute();
+                    queue.remove();
+                }
             }
         });
         timer.start();
         frame.setVisible(true);
     }
+
+    public String getDir(char c) {
+        switch(c) {
+            case 'S':
+                return "South";
+            case 'E':
+                return "East";
+            case 'W':
+                return "West";
+        }
+        return "South";
+    }
+
 
     private void addTrafficLightStatusTable() {
         // TableGUI interacts with Model which contains the data
@@ -260,9 +290,63 @@ public class TrafficSystemGUI {
         }
     }
 
+    public static void validate(int entryTime, char source, char destination) {
+        boolean flag = true;
+        if (entryTime <= 0) {
+            flag = false;
+        }
+        if (source == destination) {
+            flag = false;
+        }
+        if (source != 'S' && source != 'W' && source != 'E') {
+            flag = false;
+        }
+        if (destination != 'S' && destination != 'W' && destination != 'E') {
+            flag = false;
+        }
+        if (flag == false) {
+            System.out.println("Invalid input");
+            System.exit(1);
+        }
+    }
+    public void batchInput() {
+        Scanner inputScan = new Scanner(System.in);
+        int totalVehicles = inputScan.nextInt();
+        if (totalVehicles <= 0) {
+            // throw Exception();
+        }
+        queue = new LinkedList<>();
+        // Input[] inputList = new Input(totalVehicles);
+        int entryTime;
+        char source;
+        char destination;
+        for (int i = 0; i < totalVehicles; i++) {
+            entryTime = inputScan.nextInt();
+            source = inputScan.next().charAt(0);
+            destination = inputScan.next().charAt(0);
+            Input x = new Input(entryTime, source, destination);
+            queue.add(x);
+        }
+        stopTime = inputScan.nextInt();
+    }
+
     public static void main(String args[]) {
         // Initialise and run an instance of the traffic system
         TrafficSystemGUI trafficSystem = new TrafficSystemGUI();
+        trafficSystem.batchInput();
         trafficSystem.run();
     }
+}
+
+class Input {
+    int entryTime;
+    char source;
+    char destination;
+
+    public Input(int entryTime, char source, char destination) {
+        this.entryTime = entryTime;
+        this.source = source;
+        this.destination = destination;
+    }
+
 }

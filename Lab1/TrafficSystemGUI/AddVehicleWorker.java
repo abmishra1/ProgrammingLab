@@ -29,6 +29,16 @@ public class AddVehicleWorker extends SwingWorker<Vehicle, Void> {
         if (sourceDirection.equals("East") && destinationDirection.equals("West")) {
             return 3;
         }
+        // if (sourceDirection.equals("S") && destinationDirection.equals("E")) {
+        //     return 1; 
+        // }
+        // if (sourceDirection.equals("W") && destinationDirection.equals("S")) {
+        //     return 2;
+        // }
+        // if (sourceDirection.equals("E") && destinationDirection.equals("W")) {
+        //     return 3;
+        // }
+
         // Vehicle belongs to flow which can directly pass, eg. West to East
         return -1;
     }
