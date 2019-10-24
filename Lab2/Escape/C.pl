@@ -1,5 +1,5 @@
 edge('CU', 'G1', 0).
-edge'CU', 'G2', 0).
+edge('CU', 'G2', 0).
 edge('CU', 'G3', 0).
 edge('CU', 'G4', 0).
 
@@ -48,3 +48,24 @@ edge('G11', 'G15', 4).
 edge('G12', 'G13', 4).
 edge('G12', 'G14', 5).
 
+edge('G13', 'G14', 4).
+edge('G13', 'G15', 3).
+edge('G14', 'G17', 5).
+edge('G14', 'G18', 4).
+edge('G17', 'G18', 8).
+
+connected(U, V, W) :-
+    edge(U, V, W);
+    edge(V, U, W).
+
+myvalid(['G17']).
+
+myvalid([U, V|L]):-
+    % write(U),
+    % write(V),
+    % writeln("--"),
+    connected(U, V, _),
+    myvalid([V|L]).
+
+valid(L) :-
+   myvalid(['CU'| L]).
