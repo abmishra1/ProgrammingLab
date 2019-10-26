@@ -9,12 +9,12 @@ menu(diet, 0, 0, 1).
 
 /*Database for possible starters and their corresponding 
     values*/
-starter('Corn Tikki', 30, 0).
-starter('Tomato Soup', 30, 1).
-starter('Chilli Paneer', 30, 2).
-starter('Crispy Chicken', 40, 3).
-starter('Papdi Chaat', 20, 4).
-starter('Cold Drink', 20, 5).
+starter("Corn Tikki", 30, 0).
+starter("Tomato Soup", 20, 1).
+starter("Chilli Paneer", 40, 2).
+starter("Crispy Chicken", 40, 3).
+starter("Papdi Chaat", 20, 4).
+starter("Cold Drink", 20, 5).
 
 /*Database for possible main dish and their corresponding 
     values*/
@@ -34,14 +34,12 @@ desert("Rasmalai", 10, 2).
     and have not selected any item*/
 take_starter(_, 6, [], _).
 
-
 /*Base case: When we have exahausted all possible starters 
             and have selected a list of starters we output the total list*/
 take_starter(_, 6, CurrentList, PreviousList) :-
     CurrentList \= [],
     append(PreviousList, CurrentList, TotalList),
-    writeln(TotalList),
-    fail.
+    writeln(TotalList).
 
 /*  Case 1: For the current indexed starter we check if it is possible
             to take it in our menu if yes add it in list and call recursive
@@ -73,8 +71,7 @@ take_desert(_, 3, [], _).
 take_desert(_, 3, CurrentList, PreviousList) :-
     CurrentList \= [],
     append(PreviousList, CurrentList, TotalList),
-    writeln(TotalList),
-    fail.
+    writeln(TotalList).
 
 /*  Case 1: For the current indexed desert we check if it is possible
             to take it in our menu if yes add it in list and call recursive
@@ -101,8 +98,7 @@ satisfy_hungry() :-
     main_dish(MainDishName, _),
     desert(DesertName, _, _),
     DishCombinationList = [StarterName, MainDishName, DesertName],
-    writeln(DishCombinationList),
-    fail.
+    write(DishCombinationList).
 
 /*This function generates all possible items combination by choosing a main dish
  and then chossing a starter or desert satisfying the nutrient condition as per 
@@ -118,49 +114,36 @@ satisfy_not_so_hungry(Starter) :-
             starter(SelectedStarterName,SelectedStarterValue,_),
             SelectedStarterValue =< RemainingNutrientValue,
             DishCombinationList = [DishName,SelectedStarterName],
-            writeln(DishCombinationList)
-        )
-         ; 
+            write(DishCombinationList)
+        ); 
          /*If starter is 1 we choose deserts satisfyng the nutrient constraint*/
-         (
+        (
             desert(SelectedDesertName,SelectedDesertValue,_),
             SelectedDesertValue =< RemainingNutrientValue,
             DishCombinationList = [DishName,SelectedDesertName],
-            writeln(DishCombinationList)
+            write(DishCombinationList)
         )
         
-    ),
-    fail.
-
-/*This is a wrapper function to select the corresponding item type as requested for diet*/
-satisfy_diet(Starter, MainDish, Desert):-
-    (Starter = 1, satisfy_starter_diet());
-    (MainDish = 1, satisfy_main_dish_diet());
-    (Desert = 1, satisfy_desert_diet()).
-
-/*This functions calls the starter selector wrapper with nutrient value 40 to generate
-    possible combinations*/
-satisfy_starter_diet() :-
-    select_starter(40, []),
-    fail.
-
-/*This functions calls the desert selector wrapper with nutrient value 40 to generate
-    possible combinations*/
-satisfy_desert_diet() :-
-    select_desert(40, []),
-    fail.
+    ).
 
 /*This functions selects a main dish satisyfying the nutrient constraint*/
 satisfy_main_dish_diet() :-
     main_dish(DishName, NutrientValue),
     NutrientValue =< 40,
-    writeln([DishName]),
-    fail.
+    write([DishName]).
+
+/*This is a wrapper function to select the corresponding item type as requested for diet*/
+satisfy_diet(Starter, MainDish, Desert):-
+    Starter = 1, forall(select_starter(40, []), nl);
+    MainDish = 1, forall(satisfy_main_dish_diet(), nl);
+    Desert = 1, forall(select_desert(40, []), nl).
 
 /*This is wrapper function to check if the requested combination is possible and if possible
-    generate all the combinations*/
+    generate all the combinations */
 find_items(Status, Starter, MainDish, Desert) :-
     menu(Status, Starter, MainDish, Desert),
-    ((Status = hungry, satisfy_hungry());
-    (Status = not_so_hungry, satisfy_not_so_hungry(Starter));
-    (Status = diet, satisfy_diet(Starter,MainDish,Desert))).
+    (
+        Status = hungry, forall(satisfy_hungry(), nl);
+        Status = not_so_hungry, forall(satisfy_not_so_hungry(Starter), nl);
+        Status = diet, satisfy_diet(Starter, MainDish, Desert)
+    ).

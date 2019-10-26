@@ -1,5 +1,5 @@
 /***
- * To determine if an input path is a valid escape path
+ * To find all possible paths for a prisoner to escape 
  * Author: Nitin Kedia, Abhinav Mishra
 */
 
@@ -67,21 +67,27 @@ connected(Node1, Node2, EdgeWeight) :-
     edge(Node1, Node2, EdgeWeight);
     edge(Node2, Node1, EdgeWeight).
 
-% Base Case: Last node must be G17 for path to be valid
-is_valid_recur(['G17']).
+% Base Case: Path completes G17 is reached, then print path 
+generate_path_with_cycles('G17', CurrentCost, CurrentPath) :-
+    writeln(CurrentCost),
+    reverse(['G17' | CurrentPath], Path),
+    writeln(Path).
 
-% Recursion step: Current node and next node must have an edge b/w.  
-is_valid_recur([CurrentNode, NextNode | RestPath]):-
-    % writeln(CurrentNode),
-    % Weight is not needed here, so make it anonymous
-    connected(CurrentNode, NextNode, _),
-    is_valid_recur([NextNode | RestPath]).
+/***
+ * Recursion Step:
+ *  1. Find next connected node
+ *  2. This new node should not occur earlier in this path
+ *  3. Update current cost and recur
+ */
+generate_path_with_cycles(CurrentNode, CurrentCost, CurrentPath) :-
+    connected(CurrentNode, NextNode, Weight),
+    NewCost is CurrentCost + Weight,
+    generate_path_with_cycles(NextNode, NewCost, [CurrentNode | CurrentPath]).
 
-/**
- * Overall wrapper for easy input.
- * We are working on a slightly modified graph
- * which starts with Core Unit CU, so we prepend
- * this node to input path. 
- */ 
-is_valid(InputPath) :-
-    is_valid_recur(['CU' | InputPath]).
+/***
+ * Wrapper for finding all paths with and
+ * without cycles.  
+ */
+% 
+all_path_with_cycles() :-
+    generate_path_with_cycles('CU', 0, []).
