@@ -1,19 +1,47 @@
-decode(_, D1, _, [], D1).
+/* Base case when all string has been consumed we
+unify the answer of number of ways with calculated value*/
+decode(_, PreviousNumberOfWays, _, [], PreviousNumberOfWays).
 
-decode(_, _, LC, [C|_], X) :-
-    C = 48,
-    LC \= 49,
-    LC \= 50,
-    X is 0.
 
-decode(D2, D1, LC, [C|L], X) :-
-    (C = 48 , decode(0,D2,C,L,X));
-    ((C > 48, C < 58),
-        Y is D1 + D2,
-        (((LC = 49);((LC = 50),(C >= 48, C =< 55))) -> decode(D1,Y,C,L,X); decode(D1,D1,C,L,X))
+/*Case 1: When current character is 0 and previous character
+ is not 1 or 2 , this means no possible solution exists*/
+decode(_, _, LastChar, [CurrentChar|_], NumberOfWays) :-
+    CurrentChar = 48,
+    LastChar \= 49,
+    LastChar \= 50,
+    NumberOfWays is 0.
+
+
+/*Case 2: This consist of two seperate cases:
+    Case 2a: When current character is 0 we have already checked
+            that if current character is 0 our previous character
+             is 1 or 2
+    Case 2b: When current character is not equal to 0 but is some
+             number between 1 to 9*/
+decode(PrePreviousNumberOfWays, PreviousNumberOfWays, LastChar, [CurrentChar|CodedList], NumberOfWays) :-
+
+    /*Case 2a:  In this case we must combine the previous 1 or 2 
+                with this 0 to create a possible decoding therfore 
+                the number of ways till now is equal to number of 
+                ways of string with last 2 character removed (OldPreviousNumberOfWays)*/
+    (CurrentChar = 48 , decode(0,PrePreviousNumberOfWays,CurrentChar,CodedList,NumberOfWays));
+
+    /*Case 2b:  In this case current character is between 1 to 9.
+                Therefore it can be independently taken to represent
+                a letter between 'A' to 'I'. However if the previous 
+                character was 1 or the previous character was 2 and
+                current character is between 1 to 6 these last two 
+                chracters can be combined to represent a letter*/
+    ((CurrentChar > 48, CurrentChar < 58),
+        SumOfNumberOfWays is PreviousNumberOfWays + PrePreviousNumberOfWays,
+        (((LastChar = 49);((LastChar = 50),(CurrentChar >= 48, CurrentChar =< 55))) -> 
+            decode(PreviousNumberOfWays,SumOfNumberOfWays,CurrentChar,CodedList,NumberOfWays); 
+            decode(PreviousNumberOfWays,PreviousNumberOfWays,CurrentChar,CodedList,NumberOfWays))
     ).
 
-wrapper(X, S) :-
-    string_codes(S, L),
-    writeln(L),
-    decode(1,1,0,L,X).
+/*Wrapper Function to answer the total number of ways any given string
+    can be decoded.*/
+wrapper(NumberOfWays, InputString) :-
+    string_codes(InputString, CodedList),
+    writeln(CodedList),
+    decode(1,1,0,CodedList,NumberOfWays).

@@ -1,3 +1,9 @@
+/***
+ * To find all possible paths for a prisoner to escape 
+ * Author: Nitin Kedia, Abhinav Mishra
+*/
+
+% Listing all edges in format U -> V with weight W (3rd param).
 edge('CU', 'G1', 0).
 edge('CU', 'G2', 0).
 edge('CU', 'G3', 0).
@@ -20,7 +26,6 @@ edge('G5', 'G10', 4).
 edge('G5', 'G11', 6).
 edge('G5', 'G12', 7).
 
-% add edge G6 -> G5
 edge('G6', 'G7', 10).
 edge('G6', 'G8', 2).
 edge('G6', 'G10', 9).
@@ -45,8 +50,8 @@ edge('G11', 'G12', 4).
 edge('G11', 'G13', 5).
 edge('G11', 'G15', 4).
 
-edge('G12', 'G13', 4).
-edge('G12', 'G14', 5).
+edge('G12', 'G13', 7).
+edge('G12', 'G14', 8).
 
 edge('G13', 'G14', 4).
 edge('G13', 'G15', 3).
@@ -54,15 +59,39 @@ edge('G14', 'G17', 5).
 edge('G14', 'G18', 4).
 edge('G17', 'G18', 8).
 
-opt_path(Y, X) :-
-    aggregate(min(MINC, MINP), (gen_path('CU', 0, [], MINC, MINP)), min(Y, Result)),
-    reverse(Result, X).
+/***
+ * As the graph is undirected, existence of
+ * edge in either direction suffices.
+ */ 
+connected(Node1, Node2, EdgeWeight) :-
+    edge(Node1, Node2, EdgeWeight);
+    edge(Node2, Node1, EdgeWeight).
 
-gen_path('G17', CC, CP, CC, ['G17' | CP]).
-    % writeln(CC),
-    % writeln(CP).
+% Base Case: Path completes G17 is reached, then print path 
+generate_path('G17', CurrentCost, CurrentPath, CurrentCost, ['G17' | CurrentPath]).
 
-gen_path(CV, CC, CP, MINC, MINP) :-
-    edge(CV, NV, W),
-    NC is CC + W,
-    gen_path(NV, NC, [CV|CP], MINC, MINP).
+/***
+ * Recursion Step:
+ *  1. Find next connected node
+ *  2. This new node should not occur earlier in this path
+ *  3. Update current cost and recur
+ */
+generate_path(CurrentNode, CurrentCost, CurrentPath, CostAccumlator, PathAccumulator) :-
+    connected(CurrentNode, NextNode, Weight),
+    not(member(NextNode, CurrentPath)),
+    NewCost is CurrentCost + Weight,
+    generate_path(NextNode, NewCost, [CurrentNode | CurrentPath], CostAccumlator, PathAccumulator).
+
+/**
+ * Use aggregate to explore all path and store the minimum weight one
+ * Finally print the optimal path which by definition will not have any cycles.  
+ */
+optimal_path() :-
+    aggregate(
+        min(CostAccumulator, PathAccumulator),
+        generate_path('CU', 0, [], CostAccumulator, PathAccumulator),
+        min(MinCost, ReverseOptPath)
+    ),
+    reverse(ReverseOptPath, OptPath),
+    writeln(MinCost),
+    writeln(OptPath).

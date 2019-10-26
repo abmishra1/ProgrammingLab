@@ -1,3 +1,9 @@
+/***
+ * To determine if an input path is a valid escape path
+ * Author: Nitin Kedia, Abhinav Mishra
+*/
+
+% Listing all edges in format U -> V with weight W (3rd param).
 edge('CU', 'G1', 0).
 edge('CU', 'G2', 0).
 edge('CU', 'G3', 0).
@@ -20,7 +26,6 @@ edge('G5', 'G10', 4).
 edge('G5', 'G11', 6).
 edge('G5', 'G12', 7).
 
-% add edge G6 -> G5
 edge('G6', 'G7', 10).
 edge('G6', 'G8', 2).
 edge('G6', 'G10', 9).
@@ -45,8 +50,8 @@ edge('G11', 'G12', 4).
 edge('G11', 'G13', 5).
 edge('G11', 'G15', 4).
 
-edge('G12', 'G13', 4).
-edge('G12', 'G14', 5).
+edge('G12', 'G13', 7).
+edge('G12', 'G14', 8).
 
 edge('G13', 'G14', 4).
 edge('G13', 'G15', 3).
@@ -54,18 +59,28 @@ edge('G14', 'G17', 5).
 edge('G14', 'G18', 4).
 edge('G17', 'G18', 8).
 
-connected(U, V, W) :-
-    edge(U, V, W);
-    edge(V, U, W).
+/***
+ * As the graph is undirected, existence of
+ * edge in either direction suffices.
+ */ 
+connected(Node1, Node2, EdgeWeight) :-
+    edge(Node1, Node2, EdgeWeight);
+    edge(Node2, Node1, EdgeWeight).
 
-myvalid(['G17']).
+% Base Case: Last node must be G17 for path to be valid
+is_valid_recur(['G17']).
 
-myvalid([U, V|L]):-
-    % write(U),
-    % write(V),
-    % writeln("--"),
-    connected(U, V, _),
-    myvalid([V|L]).
+% Recursion step: Current node and next node must have an edge b/w.  
+is_valid_recur([CurrentNode, NextNode | RestPath]):-
+    % Weight is not needed here, so make it anonymous
+    connected(CurrentNode, NextNode, _),
+    is_valid_recur([NextNode | RestPath]).
 
-valid(L) :-
-   myvalid(['CU'| L]).
+/**
+ * Overall wrapper for easy input.
+ * We are working on a slightly modified graph
+ * which starts with Core Unit CU, so we prepend
+ * this node to input path. 
+ */ 
+is_valid(InputPath) :-
+    is_valid_recur(['CU' | InputPath]).

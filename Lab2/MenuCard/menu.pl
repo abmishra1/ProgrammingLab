@@ -1,3 +1,5 @@
+/*Database for possible state and their corresponding 
+    dish type values*/
 menu(hungry, 1, 1, 1).
 menu(not_so_hungry, 1, 1, 0).
 menu(not_so_hungry, 0, 1, 1).
@@ -5,6 +7,8 @@ menu(diet, 1, 0, 0).
 menu(diet, 0, 1, 0).
 menu(diet, 0, 0, 1).
 
+/*Database for possible starters and their corresponding 
+    values*/
 starter('Corn Tikki', 30, 0).
 starter('Tomato Soup', 30, 1).
 starter('Chilli Paneer', 30, 2).
@@ -12,95 +16,151 @@ starter('Crispy Chicken', 40, 3).
 starter('Papdi Chaat', 20, 4).
 starter('Cold Drink', 20, 5).
 
+/*Database for possible main dish and their corresponding 
+    values*/
 main_dish("Kadhai Paneer with Butter/Plain Naan", 50).
 main_dish("Veg Korma with Butter/Plain Naan", 40).
 main_dish("Murgh Lababdar with Butter/Plain Naan", 50).
 main_dish("Veg Dum Biryani with Dal Tadka", 50).
 main_dish("Steam Rice with Dal Tadka", 40).
 
+/*Database for possible desert and their corresponding 
+    values*/
 desert("Ice-cream", 20, 0).
 desert("Malai Sandwich", 30, 1).
 desert("Rasmalai", 10, 2).
 
+/*Base case: When we have exahausted all possible starters 
+    and have not selected any item*/
 take_starter(_, 6, [], _).
-take_starter(_, 6, CL, PL) :-
-    CL \= [],
-    append(PL, CL, TL),
-    writeln(TL),
+
+
+/*Base case: When we have exahausted all possible starters 
+            and have selected a list of starters we output the total list*/
+take_starter(_, 6, CurrentList, PreviousList) :-
+    CurrentList \= [],
+    append(PreviousList, CurrentList, TotalList),
+    writeln(TotalList),
     fail.
 
-take_starter(N, I, CL, PL) :-
-    starter(Name, NV, I),
-    N >= NV,
-    N1 is N - NV,
-    take_starter(N1, I, [Name|CL], PL).
-    
-take_starter(N, I, CL, PL) :-
-    I < 6,
-    J is I + 1,
-    take_starter(N, J, CL, PL).    
+/*  Case 1: For the current indexed starter we check if it is possible
+            to take it in our menu if yes add it in list and call recursive
+            function with updated left nutrient value*/
+take_starter(NutrientValue, Index, CurrentList, PreviousList) :-
+    starter(SelectedName, SelectedNutrientValue, Index),
+    NutrientValue >= SelectedNutrientValue,
+    RemainingNutrientValue is NutrientValue - SelectedNutrientValue,
+    take_starter(RemainingNutrientValue, Index, [SelectedName|CurrentList], PreviousList).
 
-select_starter(N, PL) :- take_starter(N, 0, [], PL).
+/*  Case 2: For the current indexed starter we leave the starter and 
+            move to the next starter*/ 
+take_starter(NutrientValue, Index, CurrentList, PreviousList) :-
+    Index < 6,
+    NextIndex is Index + 1,
+    take_starter(NutrientValue, NextIndex, CurrentList, PreviousList).    
 
+ /*Wrapper function to generate all possible combinations of starters given
+    a nutrient value*/
+select_starter(NutrientValue, PreviousList) :- take_starter(NutrientValue, 0, [], PreviousList).
+
+
+/*Base case: When we have exahausted all possible desert 
+    and have not selected any item*/
 take_desert(_, 3, [], _).
-take_desert(_, 3, CL, PL) :-
-    CL \= [],
-    append(PL, CL, TL),
-    writeln(TL),
+
+/*Base case: When we have exahausted all possible desert 
+            and have selected a list of desert we output the total list*/
+take_desert(_, 3, CurrentList, PreviousList) :-
+    CurrentList \= [],
+    append(PreviousList, CurrentList, TotalList),
+    writeln(TotalList),
     fail.
 
-take_desert(N, I, CL, PL) :-
-    desert(Name, NV, I),
-    N >= NV,
-    N1 is N - NV,
-    take_desert(N1, I, [Name|CL], PL).
-    
-take_desert(N, I, CL, PL) :-
-    I < 3,
-    J is I + 1,
-    take_desert(N, J, CL, PL).    
+/*  Case 1: For the current indexed desert we check if it is possible
+            to take it in our menu if yes add it in list and call recursive
+            function with updated left nutrient value*/
+take_desert(NutrientValue, Index, CurrentList, PreviousList) :-
+    desert(SelectedName, SelectedNutrientValue, Index),
+    NutrientValue >= SelectedNutrientValue,
+    RemainingNutrientValue is NutrientValue - SelectedNutrientValue,
+    take_desert(RemainingNutrientValue, Index, [SelectedName|CurrentList], PreviousList).
 
-select_desert(N, PL) :- take_desert(N, 0, [], PL).
+/*  Case 2: For the current indexed desert we leave the desert and 
+            move to the next desert*/ 
+take_desert(NutrientValue, Index, CurrentList, PreviousList) :-
+    Index < 3,
+    NextIndex is Index + 1,
+    take_desert(NutrientValue, NextIndex, CurrentList, PreviousList).    
+
+ /*Wrapper function to generate all possible combinations of desert given
+    a nutrient value*/
+select_desert(NutrientValue, PreviousList) :- take_desert(NutrientValue, 0, [], PreviousList).
 
 satisfy_hungry() :-
-    starter(S, _, _),
-    main_dish(M, _),
-    desert(D, _, _),
-    L = [S, M, D],
-    writeln(L),
+    starter(StarterName, _, _),
+    main_dish(MainDishName, _),
+    desert(DesertName, _, _),
+    DishCombinationList = [StarterName, MainDishName, DesertName],
+    writeln(DishCombinationList),
     fail.
 
-satisfy_not_so_hungry(X) :-
-    % writeln("inhere"),
-    main_dish(Name, NV),
-    N1 is 80 - NV,
-    writeln(Name),
-    writeln(N1),
-    % select_starter(N1,[Name]),
-    ( X = 1 -> select_starter(N1,[Name]) ; select_desert(N1,[Name])),
+/*This function generates all possible items combination by choosing a main dish
+ and then chossing a starter or desert satisfying the nutrient condition as per 
+    the combination requested*/
+satisfy_not_so_hungry(Starter) :-
+
+    /*Select a main dish and caluclate left nutrient value*/
+    main_dish(DishName, NutrientValue),
+    RemainingNutrientValue is 80 - NutrientValue,
+    ( Starter = 1 -> 
+         /*If starter is 1 we choose starters satisfyng the nutrient constraint*/
+        (
+            starter(SelectedStarterName,SelectedStarterValue,_),
+            SelectedStarterValue =< RemainingNutrientValue,
+            DishCombinationList = [DishName,SelectedStarterName],
+            writeln(DishCombinationList)
+        )
+         ; 
+         /*If starter is 1 we choose deserts satisfyng the nutrient constraint*/
+         (
+            desert(SelectedDesertName,SelectedDesertValue,_),
+            SelectedDesertValue =< RemainingNutrientValue,
+            DishCombinationList = [DishName,SelectedDesertName],
+            writeln(DishCombinationList)
+        )
+        
+    ),
     fail.
 
-satisfy_diet(X,Y,Z):-
-    (X = 1, satisfy_starter_diet());
-    (Y = 1, satisfy_main_dish_diet());
-    (Z = 1, satisfy_desert_diet()).
+/*This is a wrapper function to select the corresponding item type as requested for diet*/
+satisfy_diet(Starter, MainDish, Desert):-
+    (Starter = 1, satisfy_starter_diet());
+    (MainDish = 1, satisfy_main_dish_diet());
+    (Desert = 1, satisfy_desert_diet()).
 
+/*This functions calls the starter selector wrapper with nutrient value 40 to generate
+    possible combinations*/
 satisfy_starter_diet() :-
     select_starter(40, []),
     fail.
 
+/*This functions calls the desert selector wrapper with nutrient value 40 to generate
+    possible combinations*/
 satisfy_desert_diet() :-
     select_desert(40, []),
     fail.
 
+/*This functions selects a main dish satisyfying the nutrient constraint*/
 satisfy_main_dish_diet() :-
-    main_dish(Name, N),
-    N =< 40,
-    writeln([Name]),
+    main_dish(DishName, NutrientValue),
+    NutrientValue =< 40,
+    writeln([DishName]),
     fail.
 
-find_items(Status, X, Y, Z) :-
-    menu(Status, X, Y, Z),
+/*This is wrapper function to check if the requested combination is possible and if possible
+    generate all the combinations*/
+find_items(Status, Starter, MainDish, Desert) :-
+    menu(Status, Starter, MainDish, Desert),
     ((Status = hungry, satisfy_hungry());
-    (Status = not_so_hungry, satisfy_not_so_hungry(X));
-    (Status = diet, satisfy_diet(X,Y,Z))).
+    (Status = not_so_hungry, satisfy_not_so_hungry(Starter));
+    (Status = diet, satisfy_diet(Starter,MainDish,Desert))).
