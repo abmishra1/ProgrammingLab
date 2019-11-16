@@ -39,7 +39,7 @@ take_starter(_, 6, [], _).
 take_starter(_, 6, CurrentList, PreviousList) :-
     CurrentList \= [],
     append(PreviousList, CurrentList, TotalList),
-    writeln(TotalList).
+    write(TotalList).
 
 /*  Case 1: For the current indexed starter we check if it is possible
             to take it in our menu if yes add it in list and call recursive
@@ -71,7 +71,7 @@ take_desert(_, 3, [], _).
 take_desert(_, 3, CurrentList, PreviousList) :-
     CurrentList \= [],
     append(PreviousList, CurrentList, TotalList),
-    writeln(TotalList).
+    write(TotalList).
 
 /*  Case 1: For the current indexed desert we check if it is possible
             to take it in our menu if yes add it in list and call recursive

@@ -35,7 +35,7 @@ decode_dp(PrePreviousNumberOfWays, PreviousNumberOfWays, LastChar, [CurrentChar|
         (CurrentChar > 48, CurrentChar < 58),
         SumOfNumberOfWays is PreviousNumberOfWays + PrePreviousNumberOfWays,
         (
-            ((LastChar = 49);((LastChar = 50),(CurrentChar >= 48, CurrentChar =< 55))) -> 
+            ((LastChar = 49);((LastChar = 50),(CurrentChar >= 48, CurrentChar < 55))) -> 
             decode_dp(PreviousNumberOfWays, SumOfNumberOfWays, CurrentChar, CodedList, NumberOfWays); 
             decode_dp(PreviousNumberOfWays, PreviousNumberOfWays, CurrentChar, CodedList, NumberOfWays)
         )

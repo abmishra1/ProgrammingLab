@@ -69,8 +69,8 @@ connected(Node1, Node2, EdgeWeight) :-
 
 % Base Case: Path completes G17 is reached, then print path 
 generate_path('G17', CurrentCost, CurrentPath) :-
-    writeln(CurrentCost),
     reverse(['G17' | CurrentPath], Path),
+    writeln(CurrentCost),
     writeln(Path).
 
 /***

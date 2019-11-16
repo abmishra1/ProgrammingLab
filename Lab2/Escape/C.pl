@@ -68,14 +68,15 @@ connected(Node1, Node2, EdgeWeight) :-
     edge(Node2, Node1, EdgeWeight).
 
 % Base Case: Last node must be G17 for path to be valid
-is_valid_recur(['G17']).
+is_valid_recur(CurrentCost, CurrentCost, ['G17']).
 
 % Recursion step: Current node and next node must have an edge b/w.  
-is_valid_recur([CurrentNode, NextNode | RestPath]):-
+is_valid_recur(CurrentCost, TotalCost, [CurrentNode, NextNode | RestPath]):-
     % writeln(CurrentNode),
     % Weight is not needed here, so make it anonymous
-    connected(CurrentNode, NextNode, _),
-    is_valid_recur([NextNode | RestPath]).
+    connected(CurrentNode, NextNode, Weight),
+    NewCost is CurrentCost + Weight,
+    is_valid_recur(NewCost, TotalCost, [NextNode | RestPath]).
 
 /**
  * Overall wrapper for easy input.
@@ -84,4 +85,5 @@ is_valid_recur([CurrentNode, NextNode | RestPath]):-
  * this node to input path. 
  */ 
 is_valid(InputPath) :-
-    is_valid_recur(['CU' | InputPath]).
+    is_valid_recur(0, TotalCost, ['CU' | InputPath]),
+    writeln(TotalCost).
