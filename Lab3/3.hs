@@ -8,7 +8,6 @@
 import Data.IORef
 import System.Random
 import System.IO.Unsafe
-import Data.List.Split
 
 teams = ["BS", "CM", "CH", "CV", "CS", "DS", "EE", "HU", "MA", "ME", "PH", "ST"]
 
@@ -45,19 +44,19 @@ setAllFixtures newFixtures = do writeIORef allFixtures newFixtures
         3. lessThan: returns if first parameter is smaller 
         4. Validate date must be from (Nov) 1 to 30    
 -}
-validateTime :: [String] -> Bool
-validateTime (hh:mm:[]) = hh >= "00" && hh < "24" && mm >= "00" && mm < "60"
-validateTime _ = False
+validateTime :: Time -> Bool
+validateTime (Time hh mm) = hh >= 0 && hh < 24 && mm >= 0 && mm < 60
 
-getTime :: String -> Time
-getTime timeStr = do
-    let (hh:mm:[]) = map (read) (splitOn "." timeStr)
+getTime :: Double -> Time
+getTime givenTime = do
+    let hh = floor givenTime
+    let mm = ceiling $ (givenTime - fromIntegral hh) * 60
     Time { hh = hh, mm = mm }
 
 lessThan :: Time -> Time -> Bool
 lessThan (Time hh1 mm1) (Time hh2 mm2) = 
     if hh1 < hh2 then True
-    else if hh1 == hh2 then mm1 < mm2
+    else if hh1 == hh2 then mm1 <= mm2
     else False
   
 validateDate :: Int -> Bool
@@ -138,13 +137,14 @@ nextMatch' givenDate givenTime allFixtures
         else nextMatch' givenDate givenTime nextMatches
         where (curMatch : nextMatches) = allFixtures
 
-nextMatch :: Int -> String -> IO()
+nextMatch :: Int -> Double -> IO()
 nextMatch givenDate givenTime
     | not (validateDate givenDate) = putStrLn "Invalid Date, must be from 1 to 30."
-    | not (validateTime (splitOn "." givenTime)) = putStrLn "Invalid Time, use 24-hour format."
+    | not (validateTime time) = putStrLn "Invalid Time, use 24-hour format."
     | otherwise = do
         allFixtures <- getAllFixtures
-        printCustom (nextMatch' givenDate (getTime givenTime) allFixtures)
+        printCustom (nextMatch' givenDate time allFixtures)
+    where time = getTime givenTime
 
 -- Utility of print a list of fixtures (if any) each in a new line
 printCustom :: [Match] -> IO()
