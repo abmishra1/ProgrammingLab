@@ -68,11 +68,11 @@ validateDate date = date >= 1 && date <= 30
         1. Shuffle the default order.
         2. Keep on taking two teams from the head at a time and make a fixture between them.
         we have worked out a direct mapping from index of current pair to fixture date and time. Eg.
-         INDEX DATE TIME
-         0     1    9:30AM
-         1     1    7:30PM
-         2     2    9:30AM
-         3     2    7:30PM .. so on
+         INDEX DATE TIME   REMAINING TEAMS
+         0     1    9:30AM 10
+         1     1    7:30PM 8
+         2     2    9:30AM 6
+         3     2    7:30PM 4.. so on
          i.e. let  l = length of remaining list, it gives us the index of current pair 
          date = 3 - (length of remaining list) % 4
          time = whether number of remaining matches is odd or even
